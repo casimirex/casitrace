@@ -34,6 +34,11 @@ const PARAM_VALUES: Record<string, (orgId: string) => string> = {
   notificationId: () => newId(),
   lotId: () => newId(),
   eventId: () => newId(),
+  handoffId: () => newId(),
+  grantId: () => newId(),
+  requestId: () => newId(),
+  requirementId: () => newId(),
+  token: () => "not-a-real-invitation-token-000000",
 };
 /** Operations whose only path parameters are these can be called successfully by a member. */
 const LISTING_PARAMS = new Set(["orgId", "kind"]);

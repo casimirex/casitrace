@@ -96,8 +96,33 @@ export function TraceGraph({ trace, orgId }: { trace: Trace; orgId: string }) {
           const p = pos.get(n.lotId);
           if (!p) return null;
           const root = n.depth === 0;
-          return (
-            <Link key={n.lotId} to={`/orgs/${orgId}/lots/${n.lotId}`}>
+          if (n.redacted) {
+            // Another organisation holds this part of the chain and has not shared it.
+            return (
+              <g key={n.lotId} data-testid="redacted-node">
+                <title>{`${n.org.name} has not shared this part of the chain`}</title>
+                <rect
+                  x={p.x}
+                  y={p.y}
+                  width={W}
+                  height={H}
+                  rx={4}
+                  fill="var(--color-canvas)"
+                  stroke="var(--color-muted)"
+                  strokeDasharray="5 4"
+                />
+                <text x={p.x + 10} y={p.y + 20} fontSize={12} fontWeight={600} fill="var(--color-ink)">
+                  {n.org.name.slice(0, 22)}
+                </text>
+                <text x={p.x + 10} y={p.y + 38} fontSize={11} fill="var(--color-muted)">
+                  Not shared{n.org.verified ? " · verified business" : ""}
+                </text>
+              </g>
+            );
+          }
+          const own = n.org.id === orgId;
+          const body = (
+            <>
               <rect
                 x={p.x}
                 y={p.y}
@@ -105,7 +130,7 @@ export function TraceGraph({ trace, orgId }: { trace: Trace; orgId: string }) {
                 height={H}
                 rx={4}
                 fill={root ? "var(--color-brand)" : "var(--color-surface)"}
-                stroke="var(--color-brand)"
+                stroke={own ? "var(--color-brand)" : "var(--color-muted)"}
               />
               <text
                 x={p.x + 10}
@@ -122,9 +147,22 @@ export function TraceGraph({ trace, orgId }: { trace: Trace; orgId: string }) {
                 fontSize={11}
                 fill={root ? "var(--color-canvas)" : "var(--color-muted)"}
               >
-                {n.productName.slice(0, 18)} · {n.initialQuantity} {n.uomCode}
+                {own
+                  ? `${n.productName.slice(0, 18)} · ${n.initialQuantity} ${n.uomCode}`
+                  : `${n.org.name.slice(0, 16)} · ${n.productName.slice(0, 10)}`}
               </text>
+            </>
+          );
+          // Only the viewer's own lots have a page here; shared lots belong to another organisation.
+          return own ? (
+            <Link key={n.lotId} to={`/orgs/${orgId}/lots/${n.lotId}`}>
+              {body}
             </Link>
+          ) : (
+            <g key={n.lotId}>
+              <title>{`Shared by ${n.org.name}`}</title>
+              {body}
+            </g>
           );
         })}
         {customers.map((s, i) => {

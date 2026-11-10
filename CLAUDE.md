@@ -85,6 +85,16 @@ Casitrace is a food traceability and evidence platform. The plan is `roadmap-v2.
 - KDE changes: add a new schema label (e.g. `transform.milling@2`); never edit a released schema.
 - Tests: `traceability-properties.test.ts` (seeded random sequences + invariants) and `traceability-performance.test.ts` (NFR) must stay green.
 
+## Exchange across organisations (P6)
+
+- Module `apps/api/src/modules/exchange`. Two-party tables (`handoff`, `cross_lot_link`, `sharing_grant`, `shared_access`, `evidence_request`) have RLS letting either party see the row; nothing else of the other party is visible to the viewer's scope.
+- **Reading another organisation's data**: only after checking an active grant (`findLotGrant`, evidence grants), then reading under the *grantor's* scope (`withTenant(db, grantorOrgId, …)`) for exactly the granted resources, and logging it with `logSharedAccess`. Never widen a read beyond what the grant covers.
+- Grants "to every downstream holder" (`grantee_org_id` null) are visible only in the grantor's scope; they apply when the viewer reached the lot by walking handoffs from its own lots.
+- Cross-organisation traces use `traceAcross` (exchange/cross-trace.ts); `traceLocal` is single-organisation. Unshared parts become redacted nodes (organisation name + verification only); backward segments drop the other side's customers, forward segments its other inputs.
+- Other organisations' identity: `orgIdentities()` (name + verified flag via the `organization_profile_public` view). Do not read other organisations' profiles directly.
+- A SHIP to a partner with `linkedOrgId` creates a handoff in the same transaction; voiding it is refused once accepted.
+- Notifications to another organisation: `notifyOrg()` (in-app + `notice` email).
+
 ## Auth (ADR 0009)
 
 - Better Auth handles sign-up, verification, sessions, password reset, organisations, invitations and TOTP at `/api/v1/auth`. Do not re-implement these.

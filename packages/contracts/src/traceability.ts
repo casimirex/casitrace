@@ -137,6 +137,14 @@ export const RecordEvent = z
     overrideMassBalance: z.object({ reason: z.string().trim().min(5).max(500) }).optional(),
     /** Client-generated key so a retried submission (e.g. from an offline queue) is recorded once. */
     idempotencyKey: z.string().min(8).max(100).optional(),
+    /** SHIP to an organisation on Casitrace: share the shipped lots' history with it. */
+    share: z
+      .object({
+        upstreamDepth: z.number().int().min(0).max(20).default(5),
+        includeKdes: z.boolean().default(true),
+        includeEvidence: z.boolean().default(false),
+      })
+      .optional(),
   })
   .openapi("RecordEvent");
 export type RecordEvent = z.infer<typeof RecordEvent>;
@@ -216,7 +224,12 @@ export const LotDto = z
 export const LotDetail = LotDto.extend({ events: z.array(TraceEventDto) }).openapi("LotDetail");
 
 export const TraceNode = z.object({
+  /** Lot ID, or for a redacted node an opaque placeholder ID. */
   lotId: z.uuid(),
+  /** The organisation holding the lot. */
+  org: z.object({ id: z.uuid(), name: z.string(), verified: z.boolean() }),
+  /** True when the holder has not shared this part of the chain: only the organisation is shown. */
+  redacted: z.boolean(),
   lotCode: z.string(),
   productSku: z.string(),
   productName: z.string(),

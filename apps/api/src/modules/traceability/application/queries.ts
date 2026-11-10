@@ -3,6 +3,7 @@ import type { Db, Prisma, Tx } from "@casitrace/db";
 import { AppError } from "@casitrace/shared";
 import type { z } from "zod";
 import { withTenant } from "../../../platform/tenant";
+import { orgIdentities } from "../../exchange/application/orgs";
 import { D, fixed } from "../domain/quantity";
 
 type LotOut = z.infer<typeof LotDto>;
@@ -250,7 +251,8 @@ const walk = async (tx: Tx, rootLotId: string, direction: "backward" | "forward"
   return rows.map((r) => ({ lotId: r.lot_id, depth: direction === "backward" ? -r.depth : r.depth }));
 };
 
-export const trace = (
+/** Trace within one organisation's own records. Cross-organisation tracing: exchange/cross-trace.ts. */
+export const traceLocal = (
   db: Db,
   orgId: string,
   rootLotId: string,
@@ -259,6 +261,7 @@ export const trace = (
 ) =>
   withTenant(db, orgId, async (tx): Promise<TraceResult> => {
     const started = performance.now();
+    const holder = (await orgIdentities(tx, [orgId])).get(orgId) ?? { id: orgId, name: "", verified: false };
     if (!(await tx.lot.count({ where: { id: rootLotId } })))
       throw new AppError("NOT_FOUND", "Lot not found.");
     const up = direction === "forward" ? [] : await walk(tx, rootLotId, "backward", maxDepth);
@@ -310,6 +313,8 @@ export const trace = (
         const v = versions.get(l.productVersionId);
         return {
           lotId: l.id,
+          org: holder,
+          redacted: false,
           lotCode: l.lotCode,
           productSku: products.get(l.productId)?.sku ?? "",
           productName: v?.name ?? "",
@@ -393,7 +398,7 @@ export const trace = (
 
 // ─── trace report (CSV) ─────────────────────────────────────────────────────
 
-const csvCell = (v: unknown) => {
+export const csvCell = (v: unknown) => {
   const s = v === null || v === undefined ? "" : typeof v === "string" ? v : JSON.stringify(v);
   // Neutralise spreadsheet formulas and quote when needed.
   const safe = /^[=+\-@\t\r]/.test(s) ? `'${s}` : s;
@@ -420,64 +425,3 @@ export const REPORT_COLUMNS = [
   "kdes",
   "note",
 ] as const;
-
-/**
- * Sortable CSV of every key data element for a lot's full chain, upstream and downstream
- * (FSMA 204-style "within 24 hours" report; roadmap-v2 P5). One row per lot per event.
- */
-export const traceReport = async (db: Db, orgId: string, lotId: string) => {
-  const t = await trace(db, orgId, lotId, "both", 50);
-  return withTenant(db, orgId, async (tx) => {
-    const ids = t.nodes.map((n) => n.lotId);
-    const depth = new Map(t.nodes.map((n) => [n.lotId, n.depth]));
-    const events = await tx.traceEvent.findMany({
-      where: { lines: { some: { lotId: { in: ids } } }, type: { not: "VOID" } },
-      include: { lines: true },
-      orderBy: [{ occurredAt: "asc" }, { recordedAt: "asc" }],
-    });
-    const voided = new Set(
-      (await tx.traceEvent.findMany({ where: { voidsEventId: { in: events.map((e) => e.id) } } })).map(
-        (v) => v.voidsEventId,
-      ),
-    );
-    const dtos = await eventDtos(
-      tx,
-      events.filter((e) => !voided.has(e.id)),
-    );
-    const rows = [REPORT_COLUMNS.join(",")];
-    for (const e of dtos) {
-      for (const l of e.lines) {
-        if (!depth.has(l.lot.id)) continue;
-        rows.push(
-          [
-            e.occurredAt,
-            e.recordedAt,
-            e.id,
-            e.type,
-            e.process,
-            e.location?.code,
-            e.location?.name,
-            e.partner?.name,
-            l.lot.lotCode,
-            l.lot.productSku,
-            l.lot.productName,
-            l.lot.productVersion,
-            l.role,
-            l.quantity,
-            l.uomCode,
-            depth.get(l.lot.id),
-            e.kdes,
-            e.note,
-          ]
-            .map(csvCell)
-            .join(","),
-        );
-      }
-    }
-    return {
-      csv: `${rows.join("\n")}\n`,
-      lotCode: t.nodes.find((n) => n.depth === 0)?.lotCode ?? lotId,
-      truncated: t.truncated,
-    };
-  });
-};

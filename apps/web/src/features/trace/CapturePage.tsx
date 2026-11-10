@@ -279,9 +279,16 @@ function ReceiveForm({ orgId }: { orgId: string }) {
 function ShipForm({ orgId }: { orgId: string }) {
   const md = useMasterData(orgId);
   const { state, busy, submit } = useSubmit(orgId);
+  const customers = md.partners.filter((p) => p.kind !== "supplier");
+  const [customerId, setCustomerId] = useState("");
+  const customer = customers.find((p) => p.id === (customerId || customers[0]?.id));
   const onSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const v = formValues(e.currentTarget);
+    const share =
+      customer?.onPlatform && v.share === "on"
+        ? { upstreamDepth: 5, includeKdes: v.shareDetails === "on", includeEvidence: false }
+        : undefined;
     void submit(
       {
         type: "SHIP",
@@ -293,6 +300,7 @@ function ShipForm({ orgId }: { orgId: string }) {
         },
         inputs: [{ lotId: v.lotId ?? "", quantity: v.quantity ?? "0" }],
         outputs: [],
+        ...(share ? { share } : {}),
       },
       `Shipment of ${v.quantity}`,
       e.currentTarget,
@@ -301,15 +309,34 @@ function ShipForm({ orgId }: { orgId: string }) {
   return (
     <form onSubmit={onSubmit} className="grid gap-3">
       <Result state={state} />
-      <SelectField label="To customer" name="partnerId" required>
-        {md.partners
-          .filter((p) => p.kind !== "supplier")
-          .map((p) => (
-            <option key={p.id} value={p.id}>
-              {p.name}
-            </option>
-          ))}
+      <SelectField
+        label="To customer"
+        name="partnerId"
+        required
+        value={customer?.id ?? ""}
+        onChange={(e) => setCustomerId(e.target.value)}
+      >
+        {customers.map((p) => (
+          <option key={p.id} value={p.id}>
+            {p.name}
+            {p.onPlatform ? " (on Casitrace)" : ""}
+          </option>
+        ))}
       </SelectField>
+      {customer?.onPlatform && (
+        <fieldset className="grid gap-1 rounded border border-line p-3 text-sm">
+          <legend className="px-1 font-medium">They use Casitrace</legend>
+          <label className="flex items-center gap-2">
+            <input type="checkbox" name="share" defaultChecked /> Share this lot's history with them (5 steps
+            back)
+          </label>
+          <label className="flex items-center gap-2">
+            <input type="checkbox" name="shareDetails" defaultChecked /> Include process details
+            (temperatures, dates…)
+          </label>
+          <p className="text-xs text-muted">You can stop sharing at any time on the Sharing page.</p>
+        </fieldset>
+      )}
       <SelectField label="Lot" name="lotId" required>
         {md.lots.map((l) => (
           <option key={l.id} value={l.id}>

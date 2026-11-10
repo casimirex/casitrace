@@ -12,8 +12,9 @@ import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
 import type { AppEnv, Deps } from "../../../context";
 import { withAccess } from "../../../platform/access";
 import { errorResponses as E, json, orgCommand } from "../../../platform/http";
+import { trace, traceReport } from "../../exchange/application/cross-trace";
 import { type Ctx, recordEvent, setHold, voidEvent } from "../application/events";
-import { getEvent, getLot, listEvents, listLots, trace, traceReport } from "../application/queries";
+import { getEvent, getLot, listEvents, listLots } from "../application/queries";
 
 const LotParams = OrgIdParam.extend({ lotId: z.uuid().openapi({ param: { name: "lotId", in: "path" } }) });
 const EventParams = OrgIdParam.extend({
@@ -231,11 +232,14 @@ export const traceabilityRoutes = (deps: Deps) => {
         c,
         "query",
       );
-      return c.json(await trace(db, orgId, lotId, direction, depth), 200);
+      return c.json(
+        await trace(db, { orgId, actorId: orgCommand(c).actor.id }, lotId, direction, depth),
+        200,
+      );
     })
     .openapi(reportR, async (c) => {
       const { orgId, lotId } = valid<{ orgId: string; lotId: string }>(c, "param");
-      const report = await traceReport(db, orgId, lotId);
+      const report = await traceReport(db, { orgId, actorId: orgCommand(c).actor.id }, lotId);
       c.header(
         "content-disposition",
         `attachment; filename="trace-${report.lotCode.replace(/[^A-Za-z0-9._-]/g, "_")}.csv"`,

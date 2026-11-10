@@ -1,5 +1,7 @@
 /** Email templates. Must stay in sync with EmailRequest in apps/api/src/platform/email.ts. */
 export type EmailRequest =
+  | { template: "notice"; to: string; data: { name: string; title: string; body: string; url: string } }
+  | { template: "partner-claim"; to: string; data: { inviterName: string; partnerName: string; url: string } }
   | { template: "verify-email"; to: string; data: { name: string; url: string } }
   | { template: "reset-password"; to: string; data: { name: string; url: string } }
   | {
@@ -91,6 +93,32 @@ export const render = (req: EmailRequest): RenderedEmail => {
           expired
             ? "Expired certificates no longer count as valid evidence."
             : "Upload the renewed certificate before it expires.",
+        ),
+      };
+    }
+    case "notice": {
+      const { name, title, body, url } = req.data;
+      return {
+        subject: title,
+        text: `Hi ${name},\n\n${body}\n\n${url}`,
+        html: layout(
+          [`Hi ${esc(name)},`, esc(body)],
+          { label: "Open in Casitrace", url },
+          "You receive this because of your role in the organisation.",
+        ),
+      };
+    }
+    case "partner-claim": {
+      const { inviterName, partnerName, url } = req.data;
+      return {
+        subject: `${inviterName} invites ${partnerName} to Casitrace`,
+        text: `${inviterName} records ${partnerName} as a trading partner on Casitrace and invites you to link your own organisation, so shipments between you can be traced end to end.\n\n${url}\n\nThe invitation expires in 14 days.`,
+        html: layout(
+          [
+            `<strong>${esc(inviterName)}</strong> records <strong>${esc(partnerName)}</strong> as a trading partner on Casitrace and invites you to link your own organisation, so shipments between you can be traced end to end.`,
+          ],
+          { label: "Link your organisation", url },
+          "The invitation expires in 14 days. Your records stay private unless you choose to share them.",
         ),
       };
     }

@@ -1027,6 +1027,14 @@
           "onPlatform": {
             "type": "boolean"
           },
+          "approvalStatus": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "approved",
+              "suspended"
+            ]
+          },
           "email": {
             "type": [
               "string",
@@ -1094,6 +1102,7 @@
           "linkedOrgId",
           "linkedOrgName",
           "onPlatform",
+          "approvalStatus",
           "email",
           "countryCode",
           "registrationNumber",
@@ -2697,6 +2706,25 @@
             "type": "string",
             "minLength": 8,
             "maxLength": 100
+          },
+          "share": {
+            "type": "object",
+            "properties": {
+              "upstreamDepth": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 20,
+                "default": 5
+              },
+              "includeKdes": {
+                "type": "boolean",
+                "default": true
+              },
+              "includeEvidence": {
+                "type": "boolean",
+                "default": false
+              }
+            }
           }
         },
         "required": [
@@ -2886,6 +2914,29 @@
                   "type": "string",
                   "format": "uuid"
                 },
+                "org": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "verified": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "name",
+                    "verified"
+                  ]
+                },
+                "redacted": {
+                  "type": "boolean"
+                },
                 "lotCode": {
                   "type": "string"
                 },
@@ -2946,6 +2997,8 @@
               },
               "required": [
                 "lotId",
+                "org",
+                "redacted",
                 "lotCode",
                 "productSku",
                 "productName",
@@ -3095,6 +3148,768 @@
           "truncated",
           "maxDepth",
           "elapsedMs"
+        ]
+      },
+      "Handoff": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "direction": {
+            "type": "string",
+            "enum": [
+              "incoming",
+              "outgoing"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "accepted",
+              "disputed",
+              "cancelled"
+            ]
+          },
+          "counterparty": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "name": {
+                "type": "string"
+              },
+              "verified": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "verified"
+            ]
+          },
+          "shippedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "lines": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "senderLotId": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "lotCode": {
+                  "type": "string"
+                },
+                "productSku": {
+                  "type": "string"
+                },
+                "productName": {
+                  "type": "string"
+                },
+                "gtin": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "category": {
+                  "type": "string"
+                },
+                "quantity": {
+                  "type": "string"
+                },
+                "uomCode": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "senderLotId",
+                "lotCode",
+                "productSku",
+                "productName",
+                "gtin",
+                "category",
+                "quantity",
+                "uomCode"
+              ]
+            }
+          },
+          "shipmentRef": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "disputeReason": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "decidedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "receivedLots": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "senderLotId": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "lotId": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "lotCode": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "senderLotId",
+                "lotId",
+                "lotCode"
+              ]
+            }
+          },
+          "sharedHistory": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "direction",
+          "status",
+          "counterparty",
+          "shippedAt",
+          "lines",
+          "shipmentRef",
+          "disputeReason",
+          "decidedAt",
+          "receivedLots",
+          "sharedHistory"
+        ]
+      },
+      "AcceptHandoff": {
+        "type": "object",
+        "properties": {
+          "lines": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "senderLotId": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "productId": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "lotCode": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 60
+                },
+                "quantity": {
+                  "type": "string",
+                  "pattern": "^\\d+(\\.\\d{1,6})?$"
+                },
+                "locationId": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              },
+              "required": [
+                "senderLotId",
+                "productId"
+              ]
+            },
+            "minItems": 1
+          },
+          "occurredAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "lines"
+        ]
+      },
+      "DisputeHandoff": {
+        "type": "object",
+        "properties": {
+          "reason": {
+            "type": "string",
+            "minLength": 5,
+            "maxLength": 1000
+          }
+        },
+        "required": [
+          "reason"
+        ]
+      },
+      "Grant": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "lot",
+              "evidence"
+            ]
+          },
+          "grantor": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "name": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "name"
+            ]
+          },
+          "grantee": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "name": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "name"
+            ]
+          },
+          "lot": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "lotCode": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "lotCode"
+            ]
+          },
+          "evidence": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "title": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "title"
+            ]
+          },
+          "upstreamDepth": {
+            "type": "integer"
+          },
+          "downstreamDepth": {
+            "type": "integer"
+          },
+          "includeKdes": {
+            "type": "boolean"
+          },
+          "includeEvidence": {
+            "type": "boolean"
+          },
+          "note": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "revokedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "accessCount": {
+            "type": "integer"
+          },
+          "lastAccessAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "grantor",
+          "grantee",
+          "lot",
+          "evidence",
+          "upstreamDepth",
+          "downstreamDepth",
+          "includeKdes",
+          "includeEvidence",
+          "note",
+          "createdAt",
+          "revokedAt",
+          "accessCount",
+          "lastAccessAt"
+        ]
+      },
+      "GrantInput": {
+        "type": "object",
+        "properties": {
+          "granteeOrgId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          },
+          "lotId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "upstreamDepth": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 20,
+            "default": 5
+          },
+          "downstreamDepth": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 20,
+            "default": 0
+          },
+          "includeKdes": {
+            "type": "boolean",
+            "default": true
+          },
+          "includeEvidence": {
+            "type": "boolean",
+            "default": false
+          },
+          "note": {
+            "type": "string",
+            "maxLength": 500
+          }
+        },
+        "required": [
+          "granteeOrgId",
+          "lotId"
+        ],
+        "description": "granteeOrgId null = every organisation downstream of the lot"
+      },
+      "EvidenceRequest": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "direction": {
+            "type": "string",
+            "enum": [
+              "outgoing",
+              "incoming"
+            ]
+          },
+          "counterparty": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "name": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "name"
+            ]
+          },
+          "evidenceType": {
+            "type": "string",
+            "enum": [
+              "certificate",
+              "lab_report",
+              "inspection_report",
+              "supplier_declaration",
+              "delivery_note",
+              "photo",
+              "other"
+            ]
+          },
+          "scheme": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "note": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "dueDate": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "open",
+              "fulfilled",
+              "declined",
+              "cancelled"
+            ]
+          },
+          "declineReason": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "fulfilledEvidence": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "title": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "title"
+            ]
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "decidedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "direction",
+          "counterparty",
+          "evidenceType",
+          "scheme",
+          "note",
+          "dueDate",
+          "status",
+          "declineReason",
+          "fulfilledEvidence",
+          "createdAt",
+          "decidedAt"
+        ]
+      },
+      "EvidenceRequestInput": {
+        "type": "object",
+        "properties": {
+          "partnerId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "evidenceType": {
+            "type": "string",
+            "enum": [
+              "certificate",
+              "lab_report",
+              "inspection_report",
+              "supplier_declaration",
+              "delivery_note",
+              "photo",
+              "other"
+            ]
+          },
+          "scheme": {
+            "type": "string",
+            "maxLength": 120
+          },
+          "note": {
+            "type": "string",
+            "maxLength": 1000
+          },
+          "dueDate": {
+            "type": "string",
+            "format": "date"
+          }
+        },
+        "required": [
+          "partnerId",
+          "evidenceType"
+        ]
+      },
+      "SupplierRequirement": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/SupplierRequirementInput"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "scheme": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "id": {
+                "type": "string",
+                "format": "uuid"
+              }
+            },
+            "required": [
+              "scheme",
+              "id"
+            ]
+          }
+        ]
+      },
+      "SupplierRequirementInput": {
+        "type": "object",
+        "properties": {
+          "evidenceType": {
+            "type": "string",
+            "enum": [
+              "certificate",
+              "lab_report",
+              "inspection_report",
+              "supplier_declaration",
+              "delivery_note",
+              "photo",
+              "other"
+            ]
+          },
+          "scheme": {
+            "type": "string",
+            "maxLength": 120
+          },
+          "label": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 200
+          }
+        },
+        "required": [
+          "evidenceType",
+          "label"
+        ]
+      },
+      "PartnerCompliance": {
+        "type": "object",
+        "properties": {
+          "partnerId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "approvalStatus": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "approved",
+              "suspended"
+            ]
+          },
+          "approvedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "requirementsMet": {
+            "type": "boolean"
+          },
+          "requirements": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "requirement": {
+                  "$ref": "#/components/schemas/SupplierRequirement"
+                },
+                "met": {
+                  "type": "boolean"
+                },
+                "evidence": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string",
+                        "format": "uuid"
+                      },
+                      "title": {
+                        "type": "string"
+                      },
+                      "status": {
+                        "type": "string"
+                      },
+                      "validUntil": {
+                        "type": [
+                          "string",
+                          "null"
+                        ],
+                        "format": "date"
+                      },
+                      "source": {
+                        "type": "string",
+                        "enum": [
+                          "uploaded_by_us",
+                          "shared_by_supplier"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "title",
+                      "status",
+                      "validUntil",
+                      "source"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "requirement",
+                "met",
+                "evidence"
+              ]
+            }
+          }
+        },
+        "required": [
+          "partnerId",
+          "approvalStatus",
+          "approvedAt",
+          "requirementsMet",
+          "requirements"
+        ]
+      },
+      "ClaimInvite": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email"
+          }
+        },
+        "required": [
+          "email"
+        ]
+      },
+      "ClaimInfo": {
+        "type": "object",
+        "properties": {
+          "inviterName": {
+            "type": "string"
+          },
+          "partnerName": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "claimed": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "inviterName",
+          "partnerName",
+          "email",
+          "expiresAt",
+          "claimed"
+        ]
+      },
+      "ClaimAccept": {
+        "type": "object",
+        "properties": {
+          "organizationId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "organizationId"
         ]
       }
     },
@@ -8504,6 +9319,2547 @@
               "text/csv": {
                 "schema": {
                   "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Role does not allow this",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflicts with existing data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/orgs/{orgId}/handoffs": {
+      "get": {
+        "tags": [
+          "Exchange"
+        ],
+        "summary": "Shipments between this organisation and others on Casitrace",
+        "x-access": "org",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "019a6f3e-5b7d-7e8a-9c21-7d4e5f6a8b90"
+            },
+            "required": true,
+            "name": "orgId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "incoming",
+                "outgoing"
+              ]
+            },
+            "required": false,
+            "name": "direction",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "pending",
+                "accepted",
+                "disputed",
+                "cancelled"
+              ]
+            },
+            "required": false,
+            "name": "status",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Handoff"
+                      }
+                    }
+                  },
+                  "required": [
+                    "items"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Role does not allow this",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflicts with existing data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/orgs/{orgId}/handoffs/{handoffId}": {
+      "get": {
+        "tags": [
+          "Exchange"
+        ],
+        "summary": "One shipment",
+        "x-access": "org",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "019a6f3e-5b7d-7e8a-9c21-7d4e5f6a8b90"
+            },
+            "required": true,
+            "name": "orgId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "handoffId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Handoff"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Role does not allow this",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflicts with existing data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/orgs/{orgId}/handoffs/{handoffId}/accept": {
+      "post": {
+        "tags": [
+          "Exchange"
+        ],
+        "summary": "Book an incoming shipment in: creates the receipt and links your lots to the sender's",
+        "x-access": "org:handoff:accept",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "019a6f3e-5b7d-7e8a-9c21-7d4e5f6a8b90"
+            },
+            "required": true,
+            "name": "orgId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "handoffId",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AcceptHandoff"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Accepted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "receiveEventId": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "handoff": {
+                      "$ref": "#/components/schemas/Handoff"
+                    }
+                  },
+                  "required": [
+                    "receiveEventId",
+                    "handoff"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Role does not allow this",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflicts with existing data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/orgs/{orgId}/handoffs/{handoffId}/dispute": {
+      "post": {
+        "tags": [
+          "Exchange"
+        ],
+        "summary": "Dispute an incoming shipment (wrong product or quantity)",
+        "x-access": "org:handoff:accept",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "019a6f3e-5b7d-7e8a-9c21-7d4e5f6a8b90"
+            },
+            "required": true,
+            "name": "orgId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "handoffId",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DisputeHandoff"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Disputed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    }
+                  },
+                  "required": [
+                    "ok"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Role does not allow this",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflicts with existing data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/orgs/{orgId}/grants": {
+      "get": {
+        "tags": [
+          "Exchange"
+        ],
+        "summary": "What this organisation shares, and what is shared with it",
+        "x-access": "org",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "019a6f3e-5b7d-7e8a-9c21-7d4e5f6a8b90"
+            },
+            "required": true,
+            "name": "orgId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "given": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Grant"
+                      }
+                    },
+                    "received": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Grant"
+                      }
+                    }
+                  },
+                  "required": [
+                    "given",
+                    "received"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Role does not allow this",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflicts with existing data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Exchange"
+        ],
+        "summary": "Share a lot's history with an organisation (or every downstream holder)",
+        "x-access": "org:share:manage",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "019a6f3e-5b7d-7e8a-9c21-7d4e5f6a8b90"
+            },
+            "required": true,
+            "name": "orgId",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GrantInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Shared",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Grant"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Role does not allow this",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflicts with existing data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/orgs/{orgId}/grants/{grantId}/revoke": {
+      "post": {
+        "tags": [
+          "Exchange"
+        ],
+        "summary": "Stop sharing (takes effect immediately)",
+        "x-access": "org:share:manage",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "019a6f3e-5b7d-7e8a-9c21-7d4e5f6a8b90"
+            },
+            "required": true,
+            "name": "orgId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "grantId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Revoked",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    }
+                  },
+                  "required": [
+                    "ok"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Role does not allow this",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflicts with existing data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/orgs/{orgId}/grants/{grantId}/access": {
+      "get": {
+        "tags": [
+          "Exchange"
+        ],
+        "summary": "Who used a grant, and when",
+        "x-access": "org",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "019a6f3e-5b7d-7e8a-9c21-7d4e5f6a8b90"
+            },
+            "required": true,
+            "name": "orgId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "grantId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "action": {
+                            "type": "string"
+                          },
+                          "actorId": {
+                            "type": [
+                              "string",
+                              "null"
+                            ],
+                            "format": "uuid"
+                          },
+                          "granteeOrgId": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "resourceId": {
+                            "type": [
+                              "string",
+                              "null"
+                            ],
+                            "format": "uuid"
+                          },
+                          "occurredAt": {
+                            "type": "string",
+                            "format": "date-time"
+                          }
+                        },
+                        "required": [
+                          "action",
+                          "actorId",
+                          "granteeOrgId",
+                          "resourceId",
+                          "occurredAt"
+                        ]
+                      }
+                    }
+                  },
+                  "required": [
+                    "items"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Role does not allow this",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflicts with existing data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/orgs/{orgId}/evidence-requests": {
+      "get": {
+        "tags": [
+          "Exchange"
+        ],
+        "summary": "Document requests sent and received",
+        "x-access": "org",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "019a6f3e-5b7d-7e8a-9c21-7d4e5f6a8b90"
+            },
+            "required": true,
+            "name": "orgId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/EvidenceRequest"
+                      }
+                    }
+                  },
+                  "required": [
+                    "items"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Role does not allow this",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflicts with existing data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Exchange"
+        ],
+        "summary": "Ask a supplier on Casitrace for a document",
+        "x-access": "org:evidence:create",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "019a6f3e-5b7d-7e8a-9c21-7d4e5f6a8b90"
+            },
+            "required": true,
+            "name": "orgId",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EvidenceRequestInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Requested",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EvidenceRequest"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Role does not allow this",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflicts with existing data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/orgs/{orgId}/evidence-requests/{requestId}/fulfil": {
+      "post": {
+        "tags": [
+          "Exchange"
+        ],
+        "summary": "Answer a request by sharing one of your documents",
+        "x-access": "org:evidence:update",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "019a6f3e-5b7d-7e8a-9c21-7d4e5f6a8b90"
+            },
+            "required": true,
+            "name": "orgId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "requestId",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "evidenceId": {
+                    "type": "string",
+                    "format": "uuid"
+                  }
+                },
+                "required": [
+                  "evidenceId"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Shared",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "grantId": {
+                      "type": "string",
+                      "format": "uuid"
+                    }
+                  },
+                  "required": [
+                    "ok",
+                    "grantId"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Role does not allow this",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflicts with existing data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/orgs/{orgId}/evidence-requests/{requestId}/decline": {
+      "post": {
+        "tags": [
+          "Exchange"
+        ],
+        "summary": "Decline a request",
+        "x-access": "org:evidence:update",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "019a6f3e-5b7d-7e8a-9c21-7d4e5f6a8b90"
+            },
+            "required": true,
+            "name": "orgId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "requestId",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "reason": {
+                    "type": "string",
+                    "minLength": 3,
+                    "maxLength": 1000
+                  }
+                },
+                "required": [
+                  "reason"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Declined",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    }
+                  },
+                  "required": [
+                    "ok"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Role does not allow this",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflicts with existing data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/orgs/{orgId}/evidence-requests/{requestId}/cancel": {
+      "post": {
+        "tags": [
+          "Exchange"
+        ],
+        "summary": "Withdraw a request you sent",
+        "x-access": "org:evidence:create",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "019a6f3e-5b7d-7e8a-9c21-7d4e5f6a8b90"
+            },
+            "required": true,
+            "name": "orgId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "requestId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Cancelled",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    }
+                  },
+                  "required": [
+                    "ok"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Role does not allow this",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflicts with existing data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/orgs/{orgId}/shared/evidence/{evidenceId}": {
+      "get": {
+        "tags": [
+          "Exchange"
+        ],
+        "summary": "Evidence another organisation shared with you",
+        "x-access": "org",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "019a6f3e-5b7d-7e8a-9c21-7d4e5f6a8b90"
+            },
+            "required": true,
+            "name": "orgId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "evidenceId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Evidence"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "sharedBy": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "format": "uuid"
+                            },
+                            "name": {
+                              "type": "string"
+                            },
+                            "verified": {
+                              "type": "boolean"
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "name",
+                            "verified"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "sharedBy"
+                      ]
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Role does not allow this",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflicts with existing data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/orgs/{orgId}/shared/evidence/{evidenceId}/files/{version}/download": {
+      "post": {
+        "tags": [
+          "Exchange"
+        ],
+        "summary": "Download shared evidence (logged for both organisations)",
+        "x-access": "org",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "019a6f3e-5b7d-7e8a-9c21-7d4e5f6a8b90"
+            },
+            "required": true,
+            "name": "orgId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "evidenceId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "integer",
+              "exclusiveMinimum": 0
+            },
+            "required": true,
+            "name": "version",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DownloadLink"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Role does not allow this",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflicts with existing data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/orgs/{orgId}/supplier-requirements": {
+      "get": {
+        "tags": [
+          "Exchange"
+        ],
+        "summary": "Documents every supplier must have",
+        "x-access": "org",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "019a6f3e-5b7d-7e8a-9c21-7d4e5f6a8b90"
+            },
+            "required": true,
+            "name": "orgId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/SupplierRequirement"
+                      }
+                    }
+                  },
+                  "required": [
+                    "items"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Role does not allow this",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflicts with existing data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Exchange"
+        ],
+        "summary": "Add a supplier requirement",
+        "x-access": "org:partner:approve",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "019a6f3e-5b7d-7e8a-9c21-7d4e5f6a8b90"
+            },
+            "required": true,
+            "name": "orgId",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SupplierRequirementInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Added",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SupplierRequirement"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Role does not allow this",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflicts with existing data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/orgs/{orgId}/supplier-requirements/{requirementId}": {
+      "delete": {
+        "tags": [
+          "Exchange"
+        ],
+        "summary": "Remove a supplier requirement",
+        "x-access": "org:partner:approve",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "019a6f3e-5b7d-7e8a-9c21-7d4e5f6a8b90"
+            },
+            "required": true,
+            "name": "orgId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "requirementId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Removed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    }
+                  },
+                  "required": [
+                    "ok"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Role does not allow this",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflicts with existing data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/orgs/{orgId}/partners/{partnerId}/compliance": {
+      "get": {
+        "tags": [
+          "Exchange"
+        ],
+        "summary": "Which supplier requirements are met, with the evidence",
+        "x-access": "org",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "019a6f3e-5b7d-7e8a-9c21-7d4e5f6a8b90"
+            },
+            "required": true,
+            "name": "orgId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "partnerId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PartnerCompliance"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Role does not allow this",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflicts with existing data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/orgs/{orgId}/partners/{partnerId}/approve": {
+      "post": {
+        "tags": [
+          "Exchange"
+        ],
+        "summary": "Approve a supplier (only when every requirement is met)",
+        "x-access": "org:partner:approve",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "019a6f3e-5b7d-7e8a-9c21-7d4e5f6a8b90"
+            },
+            "required": true,
+            "name": "orgId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "partnerId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Approved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    }
+                  },
+                  "required": [
+                    "ok"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Role does not allow this",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflicts with existing data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/orgs/{orgId}/partners/{partnerId}/suspend": {
+      "post": {
+        "tags": [
+          "Exchange"
+        ],
+        "summary": "Suspend a supplier",
+        "x-access": "org:partner:approve",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "019a6f3e-5b7d-7e8a-9c21-7d4e5f6a8b90"
+            },
+            "required": true,
+            "name": "orgId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "partnerId",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "reason": {
+                    "type": "string",
+                    "minLength": 3,
+                    "maxLength": 500
+                  }
+                },
+                "required": [
+                  "reason"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Suspended",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "ok": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    }
+                  },
+                  "required": [
+                    "ok"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Role does not allow this",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflicts with existing data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/orgs/{orgId}/partners/{partnerId}/claim-invite": {
+      "post": {
+        "tags": [
+          "Exchange"
+        ],
+        "summary": "Invite an off-platform partner to link its own Casitrace organisation",
+        "x-access": "org:partner:update",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "019a6f3e-5b7d-7e8a-9c21-7d4e5f6a8b90"
+            },
+            "required": true,
+            "name": "orgId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "partnerId",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ClaimInvite"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Invited",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid"
+                    }
+                  },
+                  "required": [
+                    "id"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Role does not allow this",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflicts with existing data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/claims/{token}": {
+      "get": {
+        "tags": [
+          "Exchange"
+        ],
+        "summary": "An invitation to link your organisation to a partner record",
+        "x-access": "user",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 20,
+              "maxLength": 100
+            },
+            "required": true,
+            "name": "token",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClaimInfo"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Role does not allow this",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflicts with existing data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/claims/{token}/accept": {
+      "post": {
+        "tags": [
+          "Exchange"
+        ],
+        "summary": "Link your organisation (owner/admin; invited email address only)",
+        "x-access": "user",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 20,
+              "maxLength": 100
+            },
+            "required": true,
+            "name": "token",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ClaimAccept"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Linked",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "partnerId": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "shipmentsLinked": {
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "partnerId",
+                    "shipmentsLinked"
+                  ]
                 }
               }
             }

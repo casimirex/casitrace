@@ -237,7 +237,7 @@ describe("trace", () => {
     expect(res.headers.get("content-disposition")).toContain("trace-B750-26-001.csv");
     const csv = await res.text();
     const lines = csv.trim().split("\n");
-    expect(lines[0]).toStartWith("occurred_at,recorded_at,event_id,event_type");
+    expect(lines[0]).toStartWith("organisation,occurred_at,recorded_at,event_id,event_type");
     for (const s of [
       "H-PLOT1-01",
       "DB-0412",

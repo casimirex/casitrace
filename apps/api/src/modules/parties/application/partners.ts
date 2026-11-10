@@ -29,6 +29,7 @@ const dto = (r: Row, names: Map<string, string>): PartnerDto => ({
   linkedOrgId: r.linkedOrgId,
   linkedOrgName: r.linkedOrgId ? (names.get(r.linkedOrgId) ?? null) : null,
   onPlatform: r.linkedOrgId !== null,
+  approvalStatus: r.approvalStatus as PartnerDto["approvalStatus"],
   email: r.email,
   countryCode: r.countryCode,
   registrationNumber: r.registrationNumber,

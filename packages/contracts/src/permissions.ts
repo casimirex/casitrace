@@ -11,12 +11,14 @@ export const statements = {
   ...defaultStatements,
   audit: ["read"],
   location: ["create", "update", "archive"],
-  partner: ["create", "update", "archive"],
+  partner: ["create", "update", "archive", "approve"],
   product: ["create", "update", "archive"],
   import: ["run"],
   evidence: ["create", "update", "verify"],
   event: ["record", "void", "override"],
   lot: ["hold"],
+  share: ["manage"],
+  handoff: ["accept"],
 } as const;
 
 export const ac = createAccessControl(statements);
@@ -31,12 +33,14 @@ export const roles = {
     invitation: ["create", "cancel"],
     audit: ["read"],
     location: ["create", "update", "archive"],
-    partner: ["create", "update", "archive"],
+    partner: ["create", "update", "archive", "approve"],
     product: ["create", "update", "archive"],
     import: ["run"],
     evidence: ["create", "update", "verify"],
     event: ["record", "void", "override"],
     lot: ["hold"],
+    share: ["manage"],
+    handoff: ["accept"],
   }),
   admin: ac.newRole({
     organization: ["update"],
@@ -44,12 +48,14 @@ export const roles = {
     invitation: ["create", "cancel"],
     audit: ["read"],
     location: ["create", "update", "archive"],
-    partner: ["create", "update", "archive"],
+    partner: ["create", "update", "archive", "approve"],
     product: ["create", "update", "archive"],
     import: ["run"],
     evidence: ["create", "update", "verify"],
     event: ["record", "void", "override"],
     lot: ["hold"],
+    share: ["manage"],
+    handoff: ["accept"],
   }),
   // Operators maintain master data and capture events; they cannot archive or manage people.
   operator: ac.newRole({
@@ -60,6 +66,7 @@ export const roles = {
     evidence: ["create", "update"],
     // Operators record and correct events but cannot override mass balance.
     event: ["record", "void"],
+    handoff: ["accept"],
   }),
   // Reviewers (quality staff) handle evidence and decide whether it is verified.
   reviewer: ac.newRole({

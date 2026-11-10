@@ -10,6 +10,7 @@ import { requestContext } from "./middleware/request-context";
 import { accessRoutes } from "./modules/access/routes";
 import { catalogRoutes } from "./modules/catalog/presentation/routes";
 import { evidenceRoutes } from "./modules/evidence/presentation/routes";
+import { exchangeRoutes } from "./modules/exchange/presentation/routes";
 import { AUTH_BASE_PATH } from "./modules/identity/auth";
 import { partiesRoutes } from "./modules/parties/presentation/routes";
 import { systemRoutes } from "./modules/system/routes";
@@ -59,6 +60,7 @@ export const createApp = (deps: Deps) => {
   v1.route("/", catalogRoutes(deps));
   v1.route("/", evidenceRoutes(deps));
   v1.route("/", traceabilityRoutes(deps));
+  v1.route("/", exchangeRoutes(deps));
 
   const api = newRouter();
   api.route("/", systemRoutes(deps));

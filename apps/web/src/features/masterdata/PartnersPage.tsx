@@ -1,7 +1,8 @@
 import type { components } from "@casitrace/api-client";
-import { PARTNER_KINDS } from "@casitrace/contracts";
+import { EVIDENCE_TYPES, PARTNER_KINDS } from "@casitrace/contracts";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { type FormEvent, useState } from "react";
+import { Link } from "react-router";
 import { Alert, Button, Card, Field, SelectField } from "../../components/ui";
 import { api, unwrap } from "../../lib/api";
 import { fieldErrors, formValues, useCan, useOrgContext } from "./common";
@@ -54,7 +55,12 @@ export function PartnersPage() {
           {list.data?.map((p) => (
             <li key={p.id} className="flex flex-wrap items-center justify-between gap-3 py-2.5">
               <div className="min-w-0">
-                <p className="font-medium">{p.name}</p>
+                <Link to={p.id} className="font-medium text-brand hover:underline">
+                  {p.name}
+                </Link>
+                {p.kind !== "customer" && (
+                  <span className="ml-2 text-xs capitalize text-muted">{p.approvalStatus}</span>
+                )}
                 <p className="text-sm text-muted">
                   {[p.city, p.countryCode, p.registrationNumber].filter(Boolean).join(" · ") || "No details"}
                 </p>
@@ -71,6 +77,7 @@ export function PartnersPage() {
           ))}
         </ul>
       </Card>
+      <SupplierRequirements orgId={org.id} canEdit={can("partner:approve")} />
       {can("partner:create") && (
         <Card title="Add a partner">
           <form key={formKey} onSubmit={submit} className="grid gap-3">
@@ -102,5 +109,96 @@ export function PartnersPage() {
         </Card>
       )}
     </div>
+  );
+}
+
+function SupplierRequirements({ orgId, canEdit }: { orgId: string; canEdit: boolean }) {
+  const queryClient = useQueryClient();
+  const key = ["org", orgId, "supplier-requirements"];
+  const list = useQuery({
+    queryKey: key,
+    queryFn: async () =>
+      unwrap(await api.GET("/v1/orgs/{orgId}/supplier-requirements", { params: { path: { orgId } } })).items,
+  });
+  const [label, setLabel] = useState("");
+  const [type, setType] = useState<(typeof EVIDENCE_TYPES)[number]>("certificate");
+  const [scheme, setScheme] = useState("");
+  const add = useMutation({
+    mutationFn: async () =>
+      unwrap(
+        await api.POST("/v1/orgs/{orgId}/supplier-requirements", {
+          params: { path: { orgId } },
+          body: { label, evidenceType: type, ...(scheme ? { scheme } : {}) },
+        }),
+      ),
+    onSuccess: () => {
+      setLabel("");
+      setScheme("");
+      void queryClient.invalidateQueries({ queryKey: key });
+    },
+  });
+  const remove = useMutation({
+    mutationFn: async (requirementId: string) =>
+      unwrap(
+        await api.DELETE("/v1/orgs/{orgId}/supplier-requirements/{requirementId}", {
+          params: { path: { orgId, requirementId } },
+        }),
+      ),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: key }),
+  });
+  return (
+    <Card title="Supplier requirements">
+      <p className="mb-2 text-sm text-muted">
+        A supplier can be approved only when each of these is present, verified and in date.
+      </p>
+      <ul className="divide-y divide-line text-sm" aria-label="Supplier requirements">
+        {list.data?.map((r) => (
+          <li key={r.id} className="flex justify-between gap-2 py-1.5">
+            <span>
+              {r.label}{" "}
+              <span className="text-muted">
+                ({r.evidenceType.replaceAll("_", " ")}
+                {r.scheme ? `, ${r.scheme}` : ""})
+              </span>
+            </span>
+            {canEdit && (
+              <button type="button" className="text-muted underline" onClick={() => remove.mutate(r.id)}>
+                Remove
+              </button>
+            )}
+          </li>
+        ))}
+      </ul>
+      {canEdit && (
+        <div className="mt-3 grid gap-2 sm:grid-cols-[minmax(0,1fr)_150px_120px_auto] sm:items-end">
+          <Field
+            label="Requirement"
+            value={label}
+            onChange={(e) => setLabel(e.target.value)}
+            placeholder="Organic certificate"
+          />
+          <SelectField
+            label="Type"
+            value={type}
+            onChange={(e) => setType(e.target.value as (typeof EVIDENCE_TYPES)[number])}
+          >
+            {EVIDENCE_TYPES.map((t) => (
+              <option key={t} value={t}>
+                {t.replaceAll("_", " ")}
+              </option>
+            ))}
+          </SelectField>
+          <Field
+            label="Scheme"
+            value={scheme}
+            onChange={(e) => setScheme(e.target.value)}
+            placeholder="organic"
+          />
+          <Button variant="secondary" disabled={label.trim().length < 2} onClick={() => add.mutate()}>
+            Add
+          </Button>
+        </div>
+      )}
+    </Card>
   );
 }

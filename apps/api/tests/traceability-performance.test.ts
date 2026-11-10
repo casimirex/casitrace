@@ -6,7 +6,7 @@
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
 import type { Prisma } from "@casitrace/db";
 import { newId } from "@casitrace/shared";
-import { trace } from "../src/modules/traceability/application/queries";
+import { traceLocal as trace } from "../src/modules/traceability/application/queries";
 import { createOrg, verifiedUser } from "./auth-helpers";
 import { buildApp, db } from "./helpers";
 

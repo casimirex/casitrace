@@ -7,6 +7,11 @@ import { SignInPage, TwoFactorPage } from "../features/auth/SignInPage";
 import { SignUpPage } from "../features/auth/SignUpPage";
 import { EvidenceDetailPage } from "../features/evidence/EvidenceDetailPage";
 import { EvidencePage } from "../features/evidence/EvidencePage";
+import { ClaimPage } from "../features/exchange/ClaimPage";
+import { PartnerDetailPage } from "../features/exchange/PartnerDetailPage";
+import { SharedEvidencePage } from "../features/exchange/SharedEvidencePage";
+import { SharingPage } from "../features/exchange/SharingPage";
+import { ShipmentsPage } from "../features/exchange/ShipmentsPage";
 import { ImportPage } from "../features/masterdata/ImportPage";
 import { LocationsPage } from "../features/masterdata/LocationsPage";
 import { PartnersPage } from "../features/masterdata/PartnersPage";
@@ -56,6 +61,10 @@ export const router = createBrowserRouter([
           { path: "products", element: <ProductsPage /> },
           { path: "products/:productId", element: <ProductDetailPage /> },
           { path: "lots", element: <LotsPage /> },
+          { path: "shipments", element: <ShipmentsPage /> },
+          { path: "sharing", element: <SharingPage /> },
+          { path: "shared/evidence/:evidenceId", element: <SharedEvidencePage /> },
+          { path: "partners/:partnerId", element: <PartnerDetailPage /> },
           { path: "lots/:lotId", element: <LotDetailPage /> },
           { path: "record", element: <CapturePage /> },
           { path: "record/:kind", element: <CapturePage /> },
@@ -66,6 +75,7 @@ export const router = createBrowserRouter([
       },
       { path: "/platform/verifications", element: <VerificationsPage /> },
       { path: "/notifications", element: <NotificationsPage /> },
+      { path: "/claim/:token", element: <ClaimPage /> },
       { path: "/invitations/:invitationId", element: <InvitationPage /> },
       { path: "/account", element: <AccountPage /> },
       { path: "/status", element: <StatusPage /> },

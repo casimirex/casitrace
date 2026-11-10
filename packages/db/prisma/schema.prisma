@@ -290,6 +290,10 @@ model TradingPartner {
   city               String?
   postalCode         String?   @map("postal_code")
   notes              String?
+  /// pending | approved | suspended (supplier approval, P6)
+  approvalStatus     String    @default("pending") @map("approval_status")
+  approvedAt         DateTime? @map("approved_at") @db.Timestamptz(3)
+  approvedById       String?   @map("approved_by_id") @db.Uuid
   archivedAt         DateTime? @map("archived_at") @db.Timestamptz(3)
   createdAt          DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt          DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
@@ -618,4 +622,148 @@ model LotEdge {
   @@index([parentLotId])
   @@index([childLotId])
   @@map("lot_edge")
+}
+
+// ─── exchange (P6) ──────────────────────────────────────────────────────────
+// Rows here involve two organisations. RLS lets each party see the row; nothing else of the other
+// party's data becomes visible except through a SharingGrant checked by the application.
+
+/// A shipment from one Casitrace organisation to another, waiting for the receiver to book it in.
+model Handoff {
+  id             String    @id @db.Uuid
+  senderOrgId    String    @map("sender_org_id") @db.Uuid
+  receiverOrgId  String    @map("receiver_org_id") @db.Uuid
+  shipEventId    String    @unique @map("ship_event_id") @db.Uuid
+  /// pending | accepted | disputed | cancelled
+  status         String    @default("pending")
+  /// What the receiver may see of the shipment: lot codes, products, GTINs, quantities.
+  lines          Json
+  shippedAt      DateTime  @map("shipped_at") @db.Timestamptz(3)
+  disputeReason  String?   @map("dispute_reason")
+  receiveEventId String?   @map("receive_event_id") @db.Uuid
+  decidedById    String?   @map("decided_by_id") @db.Uuid
+  decidedAt      DateTime? @map("decided_at") @db.Timestamptz(3)
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  @@index([receiverOrgId, status])
+  @@index([senderOrgId, status])
+  @@map("handoff")
+}
+
+/// Genealogy across organisations: the sender's lot became the receiver's lot (append-only).
+model CrossLotLink {
+  id              String   @id @db.Uuid
+  upstreamOrgId   String   @map("upstream_org_id") @db.Uuid
+  upstreamLotId   String   @map("upstream_lot_id") @db.Uuid
+  downstreamOrgId String   @map("downstream_org_id") @db.Uuid
+  downstreamLotId String   @map("downstream_lot_id") @db.Uuid
+  handoffId       String   @map("handoff_id") @db.Uuid
+  createdAt       DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  @@unique([upstreamLotId, downstreamLotId])
+  @@index([downstreamLotId])
+  @@index([upstreamLotId])
+  @@map("cross_lot_link")
+}
+
+/// Explicit permission for another organisation to see a scoped part of the grantor's data.
+model SharingGrant {
+  id              String    @id @db.Uuid
+  grantorOrgId    String    @map("grantor_org_id") @db.Uuid
+  /// Null = every organisation downstream of the lot (reached through handoffs).
+  granteeOrgId    String?   @map("grantee_org_id") @db.Uuid
+  /// lot | evidence
+  kind            String
+  lotId           String?   @map("lot_id") @db.Uuid
+  evidenceId      String?   @map("evidence_id") @db.Uuid
+  /// How many steps of the grantor's genealogy upstream / downstream of the lot are visible.
+  upstreamDepth   Int       @default(0) @map("upstream_depth")
+  downstreamDepth Int       @default(0) @map("downstream_depth")
+  includeKdes     Boolean   @default(false) @map("include_kdes")
+  includeEvidence Boolean   @default(false) @map("include_evidence")
+  note            String?
+  createdById     String?   @map("created_by_id") @db.Uuid
+  createdAt       DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  revokedAt       DateTime? @map("revoked_at") @db.Timestamptz(3)
+  revokedById     String?   @map("revoked_by_id") @db.Uuid
+
+  @@index([grantorOrgId, kind])
+  @@index([granteeOrgId, kind])
+  @@index([lotId])
+  @@index([evidenceId])
+  @@map("sharing_grant")
+}
+
+/// Every use of a grant (append-only), visible to grantor and grantee.
+model SharedAccess {
+  id           String   @id @db.Uuid
+  grantId      String   @map("grant_id") @db.Uuid
+  grantorOrgId String   @map("grantor_org_id") @db.Uuid
+  granteeOrgId String   @map("grantee_org_id") @db.Uuid
+  actorId      String?  @map("actor_id") @db.Uuid
+  /// trace | trace_report | evidence | evidence_download
+  action       String
+  resourceId   String?  @map("resource_id") @db.Uuid
+  occurredAt   DateTime @default(now()) @map("occurred_at") @db.Timestamptz(3)
+
+  @@index([grantId, occurredAt])
+  @@index([grantorOrgId, occurredAt])
+  @@map("shared_access")
+}
+
+/// A buyer asks a supplier on Casitrace for a document.
+model EvidenceRequest {
+  id                  String    @id @db.Uuid
+  requesterOrgId      String    @map("requester_org_id") @db.Uuid
+  supplierOrgId       String    @map("supplier_org_id") @db.Uuid
+  requesterPartnerId  String    @map("requester_partner_id") @db.Uuid
+  evidenceType        String    @map("evidence_type")
+  scheme              String?
+  note                String?
+  dueDate             DateTime? @map("due_date") @db.Date
+  /// open | fulfilled | declined | cancelled
+  status              String    @default("open")
+  fulfilledEvidenceId String?   @map("fulfilled_evidence_id") @db.Uuid
+  grantId             String?   @map("grant_id") @db.Uuid
+  declineReason       String?   @map("decline_reason")
+  createdById         String?   @map("created_by_id") @db.Uuid
+  decidedById         String?   @map("decided_by_id") @db.Uuid
+  createdAt           DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  decidedAt           DateTime? @map("decided_at") @db.Timestamptz(3)
+
+  @@index([requesterOrgId, status])
+  @@index([supplierOrgId, status])
+  @@map("evidence_request")
+}
+
+/// Documents every supplier must have (verified) before approval.
+model SupplierRequirement {
+  id           String   @id @db.Uuid
+  orgId        String   @map("org_id") @db.Uuid
+  evidenceType String   @map("evidence_type")
+  scheme       String?
+  label        String
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  @@index([orgId])
+  @@map("supplier_requirement")
+}
+
+/// Invitation for an off-platform partner to claim its record by joining Casitrace.
+model PartnerClaim {
+  id           String    @id @db.Uuid
+  orgId        String    @map("org_id") @db.Uuid
+  partnerId    String    @map("partner_id") @db.Uuid
+  email        String
+  tokenHash    String    @unique @map("token_hash") @db.Char(64)
+  expiresAt    DateTime  @map("expires_at") @db.Timestamptz(3)
+  claimedOrgId String?   @map("claimed_org_id") @db.Uuid
+  claimedById  String?   @map("claimed_by_id") @db.Uuid
+  claimedAt    DateTime? @map("claimed_at") @db.Timestamptz(3)
+  createdById  String?   @map("created_by_id") @db.Uuid
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  @@index([orgId, partnerId])
+  @@map("partner_claim")
 }

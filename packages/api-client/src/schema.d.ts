@@ -4570,6 +4570,2081 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/orgs/{orgId}/handoffs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Shipments between this organisation and others on Casitrace */
+        get: {
+            parameters: {
+                query?: {
+                    direction?: "incoming" | "outgoing";
+                    status?: "pending" | "accepted" | "disputed" | "cancelled";
+                };
+                header?: never;
+                path: {
+                    orgId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            items: components["schemas"]["Handoff"][];
+                        };
+                    };
+                };
+                /** @description Not signed in */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Role does not allow this */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Conflicts with existing data */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Invalid input */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/orgs/{orgId}/handoffs/{handoffId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** One shipment */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    orgId: string;
+                    handoffId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Handoff"];
+                    };
+                };
+                /** @description Not signed in */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Role does not allow this */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Conflicts with existing data */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Invalid input */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/orgs/{orgId}/handoffs/{handoffId}/accept": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Book an incoming shipment in: creates the receipt and links your lots to the sender's */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    orgId: string;
+                    handoffId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["AcceptHandoff"];
+                };
+            };
+            responses: {
+                /** @description Accepted */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** Format: uuid */
+                            receiveEventId: string;
+                            handoff: components["schemas"]["Handoff"];
+                        };
+                    };
+                };
+                /** @description Not signed in */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Role does not allow this */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Conflicts with existing data */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Invalid input */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/orgs/{orgId}/handoffs/{handoffId}/dispute": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Dispute an incoming shipment (wrong product or quantity) */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    orgId: string;
+                    handoffId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["DisputeHandoff"];
+                };
+            };
+            responses: {
+                /** @description Disputed */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            ok: true;
+                        };
+                    };
+                };
+                /** @description Not signed in */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Role does not allow this */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Conflicts with existing data */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Invalid input */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/orgs/{orgId}/grants": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** What this organisation shares, and what is shared with it */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    orgId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            given: components["schemas"]["Grant"][];
+                            received: components["schemas"]["Grant"][];
+                        };
+                    };
+                };
+                /** @description Not signed in */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Role does not allow this */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Conflicts with existing data */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Invalid input */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        /** Share a lot's history with an organisation (or every downstream holder) */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    orgId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["GrantInput"];
+                };
+            };
+            responses: {
+                /** @description Shared */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Grant"];
+                    };
+                };
+                /** @description Not signed in */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Role does not allow this */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Conflicts with existing data */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Invalid input */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/orgs/{orgId}/grants/{grantId}/revoke": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Stop sharing (takes effect immediately) */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    orgId: string;
+                    grantId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Revoked */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            ok: true;
+                        };
+                    };
+                };
+                /** @description Not signed in */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Role does not allow this */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Conflicts with existing data */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Invalid input */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/orgs/{orgId}/grants/{grantId}/access": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Who used a grant, and when */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    orgId: string;
+                    grantId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            items: {
+                                action: string;
+                                /** Format: uuid */
+                                actorId: string | null;
+                                /** Format: uuid */
+                                granteeOrgId: string;
+                                /** Format: uuid */
+                                resourceId: string | null;
+                                /** Format: date-time */
+                                occurredAt: string;
+                            }[];
+                        };
+                    };
+                };
+                /** @description Not signed in */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Role does not allow this */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Conflicts with existing data */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Invalid input */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/orgs/{orgId}/evidence-requests": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Document requests sent and received */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    orgId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            items: components["schemas"]["EvidenceRequest"][];
+                        };
+                    };
+                };
+                /** @description Not signed in */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Role does not allow this */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Conflicts with existing data */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Invalid input */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        /** Ask a supplier on Casitrace for a document */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    orgId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["EvidenceRequestInput"];
+                };
+            };
+            responses: {
+                /** @description Requested */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["EvidenceRequest"];
+                    };
+                };
+                /** @description Not signed in */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Role does not allow this */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Conflicts with existing data */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Invalid input */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/orgs/{orgId}/evidence-requests/{requestId}/fulfil": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Answer a request by sharing one of your documents */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    orgId: string;
+                    requestId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        evidenceId: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Shared */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            ok: true;
+                            /** Format: uuid */
+                            grantId: string;
+                        };
+                    };
+                };
+                /** @description Not signed in */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Role does not allow this */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Conflicts with existing data */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Invalid input */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/orgs/{orgId}/evidence-requests/{requestId}/decline": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Decline a request */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    orgId: string;
+                    requestId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        reason: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Declined */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            ok: true;
+                        };
+                    };
+                };
+                /** @description Not signed in */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Role does not allow this */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Conflicts with existing data */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Invalid input */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/orgs/{orgId}/evidence-requests/{requestId}/cancel": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Withdraw a request you sent */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    orgId: string;
+                    requestId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Cancelled */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            ok: true;
+                        };
+                    };
+                };
+                /** @description Not signed in */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Role does not allow this */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Conflicts with existing data */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Invalid input */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/orgs/{orgId}/shared/evidence/{evidenceId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Evidence another organisation shared with you */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    orgId: string;
+                    evidenceId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Evidence"] & {
+                            sharedBy: {
+                                /** Format: uuid */
+                                id: string;
+                                name: string;
+                                verified: boolean;
+                            };
+                        };
+                    };
+                };
+                /** @description Not signed in */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Role does not allow this */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Conflicts with existing data */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Invalid input */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/orgs/{orgId}/shared/evidence/{evidenceId}/files/{version}/download": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Download shared evidence (logged for both organisations) */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    orgId: string;
+                    evidenceId: string;
+                    version: number;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["DownloadLink"];
+                    };
+                };
+                /** @description Not signed in */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Role does not allow this */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Conflicts with existing data */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Invalid input */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/orgs/{orgId}/supplier-requirements": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Documents every supplier must have */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    orgId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            items: components["schemas"]["SupplierRequirement"][];
+                        };
+                    };
+                };
+                /** @description Not signed in */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Role does not allow this */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Conflicts with existing data */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Invalid input */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        /** Add a supplier requirement */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    orgId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["SupplierRequirementInput"];
+                };
+            };
+            responses: {
+                /** @description Added */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["SupplierRequirement"];
+                    };
+                };
+                /** @description Not signed in */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Role does not allow this */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Conflicts with existing data */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Invalid input */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/orgs/{orgId}/supplier-requirements/{requirementId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Remove a supplier requirement */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    orgId: string;
+                    requirementId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Removed */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            ok: true;
+                        };
+                    };
+                };
+                /** @description Not signed in */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Role does not allow this */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Conflicts with existing data */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Invalid input */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/orgs/{orgId}/partners/{partnerId}/compliance": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Which supplier requirements are met, with the evidence */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    orgId: string;
+                    partnerId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PartnerCompliance"];
+                    };
+                };
+                /** @description Not signed in */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Role does not allow this */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Conflicts with existing data */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Invalid input */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/orgs/{orgId}/partners/{partnerId}/approve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Approve a supplier (only when every requirement is met) */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    orgId: string;
+                    partnerId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Approved */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            ok: true;
+                        };
+                    };
+                };
+                /** @description Not signed in */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Role does not allow this */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Conflicts with existing data */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Invalid input */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/orgs/{orgId}/partners/{partnerId}/suspend": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Suspend a supplier */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    orgId: string;
+                    partnerId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        reason: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Suspended */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            ok: true;
+                        };
+                    };
+                };
+                /** @description Not signed in */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Role does not allow this */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Conflicts with existing data */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Invalid input */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/orgs/{orgId}/partners/{partnerId}/claim-invite": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Invite an off-platform partner to link its own Casitrace organisation */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    orgId: string;
+                    partnerId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["ClaimInvite"];
+                };
+            };
+            responses: {
+                /** @description Invited */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** Format: uuid */
+                            id: string;
+                        };
+                    };
+                };
+                /** @description Not signed in */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Role does not allow this */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Conflicts with existing data */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Invalid input */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/claims/{token}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** An invitation to link your organisation to a partner record */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    token: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ClaimInfo"];
+                    };
+                };
+                /** @description Not signed in */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Role does not allow this */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Conflicts with existing data */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Invalid input */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/claims/{token}/accept": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Link your organisation (owner/admin; invited email address only) */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    token: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": components["schemas"]["ClaimAccept"];
+                };
+            };
+            responses: {
+                /** @description Linked */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** Format: uuid */
+                            partnerId: string;
+                            shipmentsLinked: number;
+                        };
+                    };
+                };
+                /** @description Not signed in */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Role does not allow this */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Conflicts with existing data */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Invalid input */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -4832,6 +6907,8 @@ export interface components {
             linkedOrgId: string | null;
             linkedOrgName: string | null;
             onPlatform: boolean;
+            /** @enum {string} */
+            approvalStatus: "pending" | "approved" | "suspended";
             email: string | null;
             countryCode: string | null;
             registrationNumber: string | null;
@@ -5233,6 +7310,14 @@ export interface components {
                 reason: string;
             };
             idempotencyKey?: string;
+            share?: {
+                /** @default 5 */
+                upstreamDepth: number;
+                /** @default true */
+                includeKdes: boolean;
+                /** @default false */
+                includeEvidence: boolean;
+            };
         };
         /** @description Voids an event; optionally records its corrected replacement in the same transaction. */
         VoidEvent: {
@@ -5283,6 +7368,13 @@ export interface components {
             nodes: {
                 /** Format: uuid */
                 lotId: string;
+                org: {
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                    verified: boolean;
+                };
+                redacted: boolean;
                 lotCode: string;
                 productSku: string;
                 productName: string;
@@ -5332,6 +7424,205 @@ export interface components {
             truncated: boolean;
             maxDepth: number;
             elapsedMs: number;
+        };
+        Handoff: {
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            direction: "incoming" | "outgoing";
+            /** @enum {string} */
+            status: "pending" | "accepted" | "disputed" | "cancelled";
+            counterparty: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+                verified: boolean;
+            };
+            /** Format: date-time */
+            shippedAt: string;
+            lines: {
+                /** Format: uuid */
+                senderLotId: string;
+                lotCode: string;
+                productSku: string;
+                productName: string;
+                gtin: string | null;
+                category: string;
+                quantity: string;
+                uomCode: string;
+            }[];
+            shipmentRef: string | null;
+            disputeReason: string | null;
+            /** Format: date-time */
+            decidedAt: string | null;
+            receivedLots: {
+                /** Format: uuid */
+                senderLotId: string;
+                /** Format: uuid */
+                lotId: string;
+                lotCode: string;
+            }[];
+            sharedHistory: boolean;
+        };
+        AcceptHandoff: {
+            lines: {
+                /** Format: uuid */
+                senderLotId: string;
+                /** Format: uuid */
+                productId: string;
+                lotCode?: string;
+                quantity?: string;
+                /** Format: uuid */
+                locationId?: string;
+            }[];
+            /** Format: date-time */
+            occurredAt?: string;
+        };
+        DisputeHandoff: {
+            reason: string;
+        };
+        Grant: {
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            kind: "lot" | "evidence";
+            grantor: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+            };
+            grantee: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+            } | null;
+            lot: {
+                /** Format: uuid */
+                id: string;
+                lotCode: string;
+            } | null;
+            evidence: {
+                /** Format: uuid */
+                id: string;
+                title: string;
+            } | null;
+            upstreamDepth: number;
+            downstreamDepth: number;
+            includeKdes: boolean;
+            includeEvidence: boolean;
+            note: string | null;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            revokedAt: string | null;
+            accessCount: number;
+            /** Format: date-time */
+            lastAccessAt: string | null;
+        };
+        /** @description granteeOrgId null = every organisation downstream of the lot */
+        GrantInput: {
+            /** Format: uuid */
+            granteeOrgId: string | null;
+            /** Format: uuid */
+            lotId: string;
+            /** @default 5 */
+            upstreamDepth: number;
+            /** @default 0 */
+            downstreamDepth: number;
+            /** @default true */
+            includeKdes: boolean;
+            /** @default false */
+            includeEvidence: boolean;
+            note?: string;
+        };
+        EvidenceRequest: {
+            /** Format: uuid */
+            id: string;
+            /** @enum {string} */
+            direction: "outgoing" | "incoming";
+            counterparty: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+            };
+            /** @enum {string} */
+            evidenceType: "certificate" | "lab_report" | "inspection_report" | "supplier_declaration" | "delivery_note" | "photo" | "other";
+            scheme: string | null;
+            note: string | null;
+            /** Format: date */
+            dueDate: string | null;
+            /** @enum {string} */
+            status: "open" | "fulfilled" | "declined" | "cancelled";
+            declineReason: string | null;
+            fulfilledEvidence: {
+                /** Format: uuid */
+                id: string;
+                title: string;
+            } | null;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            decidedAt: string | null;
+        };
+        EvidenceRequestInput: {
+            /** Format: uuid */
+            partnerId: string;
+            /** @enum {string} */
+            evidenceType: "certificate" | "lab_report" | "inspection_report" | "supplier_declaration" | "delivery_note" | "photo" | "other";
+            scheme?: string;
+            note?: string;
+            /** Format: date */
+            dueDate?: string;
+        };
+        SupplierRequirement: components["schemas"]["SupplierRequirementInput"] & {
+            scheme: string | null;
+            /** Format: uuid */
+            id: string;
+        };
+        SupplierRequirementInput: {
+            /** @enum {string} */
+            evidenceType: "certificate" | "lab_report" | "inspection_report" | "supplier_declaration" | "delivery_note" | "photo" | "other";
+            scheme?: string;
+            label: string;
+        };
+        PartnerCompliance: {
+            /** Format: uuid */
+            partnerId: string;
+            /** @enum {string} */
+            approvalStatus: "pending" | "approved" | "suspended";
+            /** Format: date-time */
+            approvedAt: string | null;
+            requirementsMet: boolean;
+            requirements: {
+                requirement: components["schemas"]["SupplierRequirement"];
+                met: boolean;
+                evidence: {
+                    /** Format: uuid */
+                    id: string;
+                    title: string;
+                    status: string;
+                    /** Format: date */
+                    validUntil: string | null;
+                    /** @enum {string} */
+                    source: "uploaded_by_us" | "shared_by_supplier";
+                }[];
+            }[];
+        };
+        ClaimInvite: {
+            /** Format: email */
+            email: string;
+        };
+        ClaimInfo: {
+            inviterName: string;
+            partnerName: string;
+            email: string;
+            /** Format: date-time */
+            expiresAt: string;
+            claimed: boolean;
+        };
+        ClaimAccept: {
+            /** Format: uuid */
+            organizationId: string;
         };
     };
     responses: never;

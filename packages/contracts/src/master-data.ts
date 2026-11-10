@@ -147,6 +147,7 @@ export const Partner = z
     linkedOrgId: z.uuid().nullable(),
     linkedOrgName: z.string().nullable(),
     onPlatform: z.boolean(),
+    approvalStatus: z.enum(["pending", "approved", "suspended"]),
     email: z.string().nullable(),
     countryCode: z.string().nullable(),
     registrationNumber: z.string().nullable(),

@@ -176,19 +176,28 @@ export function LotDetailPage() {
                         {n.depth === 0 ? "this lot" : n.depth < 0 ? `${-n.depth} up` : `${n.depth} down`}
                       </td>
                       <td className="py-1.5 pr-3 font-mono text-xs">
-                        <Link to={`/orgs/${org.id}/lots/${n.lotId}`} className="text-brand hover:underline">
-                          {n.lotCode}
-                        </Link>
+                        {n.redacted ? (
+                          <span className="font-sans text-muted">Not shared by {n.org.name}</span>
+                        ) : n.org.id === org.id ? (
+                          <Link to={`/orgs/${org.id}/lots/${n.lotId}`} className="text-brand hover:underline">
+                            {n.lotCode}
+                          </Link>
+                        ) : (
+                          <span title={`Shared by ${n.org.name}`}>{n.lotCode}</span>
+                        )}
                       </td>
-                      <td className="py-1.5 pr-3">{n.productName}</td>
+                      <td className="py-1.5 pr-3">
+                        {n.productName}
+                        {n.org.id !== org.id && !n.redacted && (
+                          <span className="text-muted"> · {n.org.name}</span>
+                        )}
+                      </td>
                       <td className="py-1.5 pr-3 text-muted">
                         {n.origin
                           ? `${EVENT_LABEL[n.origin.eventType] ?? n.origin.eventType}${n.origin.partner ? ` from ${n.origin.partner}` : ""}${n.origin.location ? ` at ${n.origin.location}` : ""}`
                           : ""}
                       </td>
-                      <td className="py-1.5">
-                        <LotStatus status={n.status} />
-                      </td>
+                      <td className="py-1.5">{n.status && <LotStatus status={n.status} />}</td>
                     </tr>
                   ))}
                 </tbody>

@@ -4,6 +4,7 @@ import { AppError, type ErrorDetail, newId } from "@casitrace/shared";
 import type { CommandContext } from "../../../platform/audit";
 import { runCommand } from "../../../platform/command";
 import { isUniqueViolation } from "../../../platform/dto";
+import { createHandoffForShipTx, onShipVoidedTx } from "../../exchange/application/handoffs";
 import { eventShapeIssues, generateLotCode } from "../domain/event-rules";
 import { checkMassBalance, type MassBalance } from "../domain/mass-balance";
 import {
@@ -138,8 +139,12 @@ export const recordEventTx = async (
       fail("A harvest happens on a plot or farm.", [{ path: "locationId", message: `is a ${loc.type}` }]);
     }
   }
+  let receiverOrgId: string | null = null;
+  if (input.share && input.type !== "SHIP")
+    fail("Sharing applies to shipments only.", [{ path: "share", message: "not a shipment" }]);
   if (input.partnerId) {
     const p = await tx.tradingPartner.findUnique({ where: { id: input.partnerId } });
+    if (input.type === "SHIP") receiverOrgId = p?.linkedOrgId ?? null;
     if (!p || p.archivedAt) fail("Trading partner not found.", [{ path: "partnerId", message: "not found" }]);
     if (input.type === "RECEIVE" && p && p.kind === "customer")
       fail("That partner is a customer, not a supplier.", [{ path: "partnerId", message: "customer" }]);
@@ -344,6 +349,14 @@ export const recordEventTx = async (
     });
   }
   await recomputeLots(tx, [...new Set(lines.map((l) => l.lotId))]);
+  if (input.type === "SHIP") {
+    if (receiverOrgId)
+      await createHandoffForShipTx(tx, ctx, eventId, receiverOrgId, new Date(input.occurredAt), input.share);
+    else if (input.share)
+      fail("This customer is not on Casitrace, so there is no one to share with.", [
+        { path: "share", message: "external customer" },
+      ]);
+  }
   return { eventId, replayed: false };
 };
 
@@ -421,6 +434,7 @@ export const voidEvent = (db: Db, ctx: Ctx, eventId: string, reason: string, rep
       if (isUniqueViolation(e)) throw new AppError("CONFLICT", "This event is already voided.");
       throw e;
     }
+    if (target.type === "SHIP") await onShipVoidedTx(tx, eventId);
     await recomputeLots(tx, [...new Set(target.lines.map((l) => l.lotId))]);
     const replaced = replacement ? await recordEventTx(tx, ctx, replacement) : null;
     return {

@@ -1,6 +1,7 @@
 export * from "./access";
 export * from "./common";
 export * from "./evidence";
+export * from "./exchange";
 export * from "./identifiers";
 export * from "./master-data";
 export * from "./permissions";

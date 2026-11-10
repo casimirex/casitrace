@@ -3,6 +3,8 @@ import { newId } from "@casitrace/shared";
 
 /** Email templates the worker knows how to render (apps/worker/src/email). */
 export type EmailRequest =
+  | { template: "notice"; to: string; data: { name: string; title: string; body: string; url: string } }
+  | { template: "partner-claim"; to: string; data: { inviterName: string; partnerName: string; url: string } }
   | { template: "verify-email"; to: string; data: { name: string; url: string } }
   | { template: "reset-password"; to: string; data: { name: string; url: string } }
   | {

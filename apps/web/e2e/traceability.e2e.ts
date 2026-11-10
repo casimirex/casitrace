@@ -59,7 +59,7 @@ test("harvest + receipt → milling → shipment, traced both ways, reported, co
   await page.getByRole("button", { name: "Record transformation" }).click();
   await expect(page.getByText("Milling recorded.")).toBeVisible();
 
-  await page.getByRole("link", { name: "Ship" }).click();
+  await page.getByRole("link", { name: "Ship", exact: true }).click();
   await expect(page.getByRole("heading", { name: "Ship" })).toBeVisible();
   await page.getByLabel("Lot", { exact: true }).selectOption({ label: "OIL-001 · EVO bulk · 480 kg" });
   await page.getByLabel("Quantity", { exact: true }).fill("200");
