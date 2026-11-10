@@ -21,6 +21,7 @@ const app = createApp({
   logger: pino({ level: "silent" }),
   version: "0.0.0",
   webOrigin: "http://localhost:5173",
+  publication: unused as Deps["publication"],
 });
 const res = await app.request("/api/openapi.json");
 const doc = await res.json();

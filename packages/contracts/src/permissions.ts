@@ -19,6 +19,7 @@ export const statements = {
   lot: ["hold"],
   share: ["manage"],
   handoff: ["accept"],
+  passport: ["publish"],
 } as const;
 
 export const ac = createAccessControl(statements);
@@ -41,6 +42,7 @@ export const roles = {
     lot: ["hold"],
     share: ["manage"],
     handoff: ["accept"],
+    passport: ["publish"],
   }),
   admin: ac.newRole({
     organization: ["update"],
@@ -56,6 +58,7 @@ export const roles = {
     lot: ["hold"],
     share: ["manage"],
     handoff: ["accept"],
+    passport: ["publish"],
   }),
   // Operators maintain master data and capture events; they cannot archive or manage people.
   operator: ac.newRole({

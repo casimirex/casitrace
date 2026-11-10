@@ -68,6 +68,7 @@ export function ProfilePage() {
       businessRoles: roles,
       website: v.website,
       description: v.description,
+      publicListing: v.publicListing === "on",
     });
   };
 
@@ -142,6 +143,20 @@ export function ProfilePage() {
               </div>
               {errors.businessRoles && <p className="mt-1 text-xs text-fail">Choose at least one.</p>}
             </fieldset>
+            <label className="flex items-start gap-2 text-sm sm:col-span-2">
+              <input
+                type="checkbox"
+                name="publicListing"
+                className="mt-1"
+                defaultChecked={p?.publicListing ?? false}
+              />
+              <span>
+                List this business in the public producer directory
+                <span className="block text-xs text-muted">
+                  Shows name, town, region, website and description. Nothing else.
+                </span>
+              </span>
+            </label>
           </fieldset>
           {editable && (
             <Button type="submit" busy={save.isPending} className="justify-self-start">

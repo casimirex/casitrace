@@ -227,6 +227,8 @@ model OrganizationProfile {
   businessRoles           String[]  @map("business_roles")
   website                 String?
   description             String?
+  /// Listed in the public directory (opt-in, P7).
+  publicListing           Boolean   @default(false) @map("public_listing")
   /// unverified | pending | verified
   verificationStatus      String    @default("unverified") @map("verification_status")
   verificationNote        String?   @map("verification_note")
@@ -766,4 +768,60 @@ model PartnerClaim {
 
   @@index([orgId, partnerId])
   @@map("partner_claim")
+}
+
+// ─── publication (P7) ───────────────────────────────────────────────────────
+
+/// A public product or lot page. The public sees only published, signed versions.
+model Passport {
+  id             String   @id @db.Uuid
+  orgId          String   @map("org_id") @db.Uuid
+  /// Short public identifier used in URLs and QR codes.
+  publicId       String   @unique @map("public_id")
+  /// product | lot
+  scope          String
+  productId      String   @map("product_id") @db.Uuid
+  lotId          String?  @map("lot_id") @db.Uuid
+  template       String
+  /// Which optional sections may be public (field-level disclosure policy).
+  disclosure     Json
+  /// draft | published | withdrawn
+  status         String   @default("draft")
+  currentVersion Int      @default(0) @map("current_version")
+  createdById    String?  @map("created_by_id") @db.Uuid
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  versions PassportVersion[]
+
+  @@index([orgId, status])
+  @@index([lotId])
+  @@index([productId])
+  @@map("passport")
+}
+
+/// An immutable published snapshot: exactly what the public sees, signed by the platform key.
+model PassportVersion {
+  id            String   @id @db.Uuid
+  orgId         String   @map("org_id") @db.Uuid
+  passportId    String   @map("passport_id") @db.Uuid
+  version       Int
+  /// Canonical JSON of the public content (the signed bytes).
+  canonical     String
+  /// SHA-256 of the canonical bytes (hex).
+  digest        String   @db.Char(64)
+  /// Ed25519 signature of the canonical bytes (base64url).
+  signature     String
+  keyId         String   @map("key_id")
+  /// GS1 GTIN-14 and lot code for Digital Link resolution (null when not applicable).
+  gtin          String?
+  lotCode       String?  @map("lot_code")
+  publishedAt   DateTime @default(now()) @map("published_at") @db.Timestamptz(3)
+  publishedById String?  @map("published_by_id") @db.Uuid
+
+  passport Passport @relation(fields: [passportId], references: [id], onDelete: Restrict)
+
+  @@unique([passportId, version])
+  @@index([gtin, lotCode])
+  @@map("passport_version")
 }

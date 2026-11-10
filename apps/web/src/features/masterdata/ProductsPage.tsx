@@ -5,6 +5,7 @@ import { Link, useNavigate, useParams } from "react-router";
 import { Alert, Button, Card } from "../../components/ui";
 import { api, unwrap } from "../../lib/api";
 import { LinkedEvidence } from "../evidence/EvidenceDetailPage";
+import { CreatePassportButton } from "../passports/PassportsPage";
 import { fieldErrors, useCan, useOrgContext } from "./common";
 import { categoryLabel, ProductForm } from "./ProductForm";
 
@@ -161,6 +162,12 @@ export function ProductDetailPage() {
           </dl>
         </Card>
         <LinkedEvidence orgId={org.id} targetType="product" targetId={p.id} />
+        <Card title="Public page">
+          <p className="mb-2 text-sm text-muted">
+            A page about this product (all lots). For a page about one lot, open the lot.
+          </p>
+          <CreatePassportButton scope="product" id={p.id} />
+        </Card>
         <Card title="Version history">
           <p className="mb-3 text-sm text-muted">
             Versions never change once saved. Lots record the version they were made with.

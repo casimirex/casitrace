@@ -5,6 +5,7 @@ import { Alert, Button, Card } from "../../components/ui";
 import { api, unwrap } from "../../lib/api";
 import { LinkedEvidence } from "../evidence/EvidenceDetailPage";
 import { useCan, useOrgContext } from "../masterdata/common";
+import { CreatePassportButton } from "../passports/PassportsPage";
 import { LotStatus } from "./LotsPage";
 import { TraceGraph } from "./TraceGraph";
 
@@ -101,6 +102,9 @@ export function LotDetailPage() {
             </>
           )}
         </dl>
+        <div className="mt-3">
+          <CreatePassportButton scope="lot" id={l.id} />
+        </div>
         {(can("lot:hold") || can("event:void")) && (
           <div className="mt-4 grid gap-2 border-t border-line pt-3 sm:grid-cols-[minmax(0,1fr)_auto]">
             <input

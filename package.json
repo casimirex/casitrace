@@ -19,7 +19,8 @@
     "test": "bun scripts/test.ts",
     "openapi": "bun run --filter '@casitrace/api' openapi && bun run --filter '@casitrace/api-client' generate",
     "e2e": "bun run --filter '@casitrace/web' e2e",
-    "db:setup": "bun scripts/db-setup.ts"
+    "db:setup": "bun scripts/db-setup.ts",
+    "keys:generate": "bun scripts/generate-signing-key.ts"
   },
   "devDependencies": {
     "@biomejs/biome": "2.6.3",

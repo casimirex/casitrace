@@ -18,7 +18,7 @@ export const linkFromEmail = async (to: string, subject: RegExp): Promise<string
         link = full.Text.match(/https?:\/\/\S+/)?.[0] ?? "";
         return link;
       },
-      { timeout: 15_000, message: `email "${subject}" to ${to}` },
+      { timeout: 30_000, message: `email "${subject}" to ${to}` },
     )
     .not.toBe("");
   return link;

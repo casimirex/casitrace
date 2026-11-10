@@ -652,6 +652,10 @@
               "null"
             ],
             "maxLength": 2000
+          },
+          "publicListing": {
+            "type": "boolean",
+            "default": false
           }
         },
         "required": [
@@ -3911,6 +3915,712 @@
         "required": [
           "organizationId"
         ]
+      },
+      "Passport": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "publicId": {
+            "type": "string"
+          },
+          "scope": {
+            "type": "string",
+            "enum": [
+              "product",
+              "lot"
+            ]
+          },
+          "product": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "sku": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "sku",
+              "name"
+            ]
+          },
+          "lot": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "lotCode": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "lotCode"
+            ]
+          },
+          "disclosure": {
+            "$ref": "#/components/schemas/Disclosure"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "draft",
+              "published",
+              "withdrawn"
+            ]
+          },
+          "currentVersion": {
+            "type": "integer"
+          },
+          "publicUrl": {
+            "type": "string"
+          },
+          "qrPayload": {
+            "type": "string"
+          },
+          "versions": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "version": {
+                  "type": "integer"
+                },
+                "publishedAt": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "digest": {
+                  "type": "string"
+                },
+                "keyId": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "version",
+                "publishedAt",
+                "digest",
+                "keyId"
+              ]
+            }
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "publicId",
+          "scope",
+          "product",
+          "lot",
+          "disclosure",
+          "status",
+          "currentVersion",
+          "publicUrl",
+          "qrPayload",
+          "versions",
+          "updatedAt"
+        ]
+      },
+      "Disclosure": {
+        "type": "object",
+        "properties": {
+          "producerAddress": {
+            "type": "boolean",
+            "default": true
+          },
+          "harvestDates": {
+            "type": "boolean",
+            "default": true
+          },
+          "processDetails": {
+            "type": "boolean",
+            "default": true
+          },
+          "originArea": {
+            "type": "boolean",
+            "default": true
+          },
+          "certificates": {
+            "type": "boolean",
+            "default": true
+          },
+          "supplierNames": {
+            "type": "boolean",
+            "default": false
+          }
+        },
+        "additionalProperties": false
+      },
+      "PassportInput": {
+        "type": "object",
+        "properties": {
+          "scope": {
+            "type": "string",
+            "enum": [
+              "product",
+              "lot"
+            ]
+          },
+          "productId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "lotId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "disclosure": {
+            "$ref": "#/components/schemas/Disclosure"
+          }
+        },
+        "required": [
+          "scope"
+        ]
+      },
+      "PassportSnapshot": {
+        "type": "object",
+        "properties": {
+          "schema": {
+            "type": "string",
+            "enum": [
+              "casitrace.passport@1"
+            ]
+          },
+          "publicId": {
+            "type": "string"
+          },
+          "version": {
+            "type": "integer",
+            "exclusiveMinimum": 0
+          },
+          "publishedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "scope": {
+            "type": "string",
+            "enum": [
+              "product",
+              "lot"
+            ]
+          },
+          "product": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "category": {
+                "type": "string"
+              },
+              "grade": {
+                "type": "string"
+              },
+              "cultivars": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "netVolumeMl": {
+                "type": "number"
+              },
+              "container": {
+                "type": "string"
+              },
+              "organicDeclared": {
+                "type": "boolean"
+              },
+              "gtin": {
+                "type": "string"
+              },
+              "originCountry": {
+                "type": "string"
+              },
+              "originRegion": {
+                "type": "string"
+              },
+              "storage": {
+                "type": "string"
+              },
+              "shelfLifeDays": {
+                "type": "number"
+              }
+            },
+            "required": [
+              "name",
+              "category",
+              "cultivars"
+            ],
+            "additionalProperties": false
+          },
+          "producer": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "verified": {
+                "type": "boolean"
+              },
+              "country": {
+                "type": "string"
+              },
+              "region": {
+                "type": "string"
+              },
+              "city": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "verified"
+            ],
+            "additionalProperties": false
+          },
+          "lot": {
+            "type": "object",
+            "properties": {
+              "lotCode": {
+                "type": "string"
+              },
+              "bestBefore": {
+                "type": "string",
+                "format": "date"
+              },
+              "harvest": {
+                "type": "object",
+                "properties": {
+                  "from": {
+                    "type": "string",
+                    "format": "date"
+                  },
+                  "to": {
+                    "type": "string",
+                    "format": "date"
+                  }
+                },
+                "required": [
+                  "from",
+                  "to"
+                ],
+                "additionalProperties": false
+              },
+              "milling": {
+                "type": "object",
+                "properties": {
+                  "date": {
+                    "type": "string",
+                    "format": "date"
+                  },
+                  "extractionMethod": {
+                    "type": "string"
+                  },
+                  "coldExtracted": {
+                    "type": "boolean"
+                  }
+                },
+                "additionalProperties": false
+              },
+              "originAreas": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "country": {
+                      "type": "string"
+                    },
+                    "region": {
+                      "type": "string"
+                    },
+                    "approxLat": {
+                      "type": "number"
+                    },
+                    "approxLon": {
+                      "type": "number"
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              }
+            },
+            "required": [
+              "lotCode"
+            ],
+            "additionalProperties": false
+          },
+          "journey": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "step": {
+                  "type": "string",
+                  "enum": [
+                    "harvest",
+                    "receipt",
+                    "milling",
+                    "blending",
+                    "bottling",
+                    "processing"
+                  ]
+                },
+                "date": {
+                  "type": "string",
+                  "format": "date"
+                },
+                "place": {
+                  "type": "string"
+                },
+                "by": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "step"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "certificates": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "evidenceId": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "title": {
+                  "type": "string"
+                },
+                "scheme": {
+                  "type": "string"
+                },
+                "issuer": {
+                  "type": "string"
+                },
+                "validUntil": {
+                  "type": "string",
+                  "format": "date"
+                },
+                "statusAtPublication": {
+                  "type": "string",
+                  "enum": [
+                    "checked",
+                    "verified",
+                    "expired"
+                  ]
+                },
+                "sha256": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "evidenceId",
+                "title",
+                "statusAtPublication",
+                "sha256"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "disclosure": {
+            "$ref": "#/components/schemas/Disclosure"
+          }
+        },
+        "required": [
+          "schema",
+          "publicId",
+          "version",
+          "publishedAt",
+          "scope",
+          "product",
+          "producer",
+          "journey",
+          "certificates",
+          "disclosure"
+        ],
+        "additionalProperties": false
+      },
+      "PublicKeys": {
+        "type": "object",
+        "properties": {
+          "keys": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "kid": {
+                  "type": "string"
+                },
+                "kty": {
+                  "type": "string",
+                  "enum": [
+                    "OKP"
+                  ]
+                },
+                "crv": {
+                  "type": "string",
+                  "enum": [
+                    "Ed25519"
+                  ]
+                },
+                "alg": {
+                  "type": "string",
+                  "enum": [
+                    "EdDSA"
+                  ]
+                },
+                "x": {
+                  "type": "string"
+                },
+                "status": {
+                  "type": "string",
+                  "enum": [
+                    "current",
+                    "previous"
+                  ]
+                }
+              },
+              "required": [
+                "kid",
+                "kty",
+                "crv",
+                "alg",
+                "x",
+                "status"
+              ]
+            }
+          }
+        },
+        "required": [
+          "keys"
+        ]
+      },
+      "PublicPassport": {
+        "type": "object",
+        "properties": {
+          "snapshot": {
+            "$ref": "#/components/schemas/PassportSnapshot"
+          },
+          "canonical": {
+            "type": "string",
+            "description": "The exact signed bytes (UTF-8 canonical JSON)"
+          },
+          "digest": {
+            "type": "string"
+          },
+          "signature": {
+            "type": "object",
+            "properties": {
+              "alg": {
+                "type": "string",
+                "enum": [
+                  "EdDSA"
+                ]
+              },
+              "kid": {
+                "type": "string"
+              },
+              "value": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "alg",
+              "kid",
+              "value"
+            ]
+          },
+          "live": {
+            "type": "object",
+            "properties": {
+              "latestVersion": {
+                "type": "integer"
+              },
+              "isLatest": {
+                "type": "boolean"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "published",
+                  "withdrawn"
+                ]
+              },
+              "recall": {
+                "type": "boolean"
+              },
+              "certificates": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "evidenceId": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "status": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "evidenceId",
+                    "status"
+                  ]
+                }
+              }
+            },
+            "required": [
+              "latestVersion",
+              "isLatest",
+              "status",
+              "recall",
+              "certificates"
+            ]
+          }
+        },
+        "required": [
+          "snapshot",
+          "canonical",
+          "digest",
+          "signature",
+          "live"
+        ]
+      },
+      "VerifyResult": {
+        "type": "object",
+        "properties": {
+          "publicId": {
+            "type": "string"
+          },
+          "version": {
+            "type": "integer"
+          },
+          "valid": {
+            "type": "boolean"
+          },
+          "kid": {
+            "type": "string"
+          },
+          "digest": {
+            "type": "string"
+          },
+          "digestMatches": {
+            "type": "boolean"
+          },
+          "latestVersion": {
+            "type": "integer"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "published",
+              "withdrawn"
+            ]
+          },
+          "recall": {
+            "type": "boolean"
+          },
+          "explanation": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "publicId",
+          "version",
+          "valid",
+          "kid",
+          "digest",
+          "digestMatches",
+          "latestVersion",
+          "status",
+          "recall",
+          "explanation"
+        ]
+      },
+      "DirectoryEntry": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "city": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "region": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "countryCode": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "businessRoles": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "website": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "description": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "verified": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "city",
+          "region",
+          "countryCode",
+          "businessRoles",
+          "website",
+          "description",
+          "verified"
+        ],
+        "additionalProperties": false
       }
     },
     "parameters": {}
@@ -11906,6 +12616,1318 @@
           },
           "422": {
             "description": "Invalid input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/orgs/{orgId}/passports": {
+      "get": {
+        "tags": [
+          "Passports"
+        ],
+        "summary": "Public product and lot pages of this organisation",
+        "x-access": "org",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "019a6f3e-5b7d-7e8a-9c21-7d4e5f6a8b90"
+            },
+            "required": true,
+            "name": "orgId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/Passport"
+                      }
+                    }
+                  },
+                  "required": [
+                    "items"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Role does not allow this",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflicts with existing data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Passports"
+        ],
+        "summary": "Start a public page for a product or a lot (draft)",
+        "x-access": "org:passport:publish",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "019a6f3e-5b7d-7e8a-9c21-7d4e5f6a8b90"
+            },
+            "required": true,
+            "name": "orgId",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PassportInput"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Passport"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Role does not allow this",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflicts with existing data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/orgs/{orgId}/passports/{passportId}": {
+      "get": {
+        "tags": [
+          "Passports"
+        ],
+        "summary": "A passport with its versions",
+        "x-access": "org",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "019a6f3e-5b7d-7e8a-9c21-7d4e5f6a8b90"
+            },
+            "required": true,
+            "name": "orgId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "passportId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Passport"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Role does not allow this",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflicts with existing data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/orgs/{orgId}/passports/{passportId}/preview": {
+      "get": {
+        "tags": [
+          "Passports"
+        ],
+        "summary": "Exactly what would be published now (not signed)",
+        "x-access": "org",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "019a6f3e-5b7d-7e8a-9c21-7d4e5f6a8b90"
+            },
+            "required": true,
+            "name": "orgId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "passportId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PassportSnapshot"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Role does not allow this",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflicts with existing data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/orgs/{orgId}/passports/{passportId}/disclosure": {
+      "put": {
+        "tags": [
+          "Passports"
+        ],
+        "summary": "Choose what may be public (applies from the next publication)",
+        "x-access": "org:passport:publish",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "019a6f3e-5b7d-7e8a-9c21-7d4e5f6a8b90"
+            },
+            "required": true,
+            "name": "orgId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "passportId",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Disclosure"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Saved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Passport"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Role does not allow this",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflicts with existing data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/orgs/{orgId}/passports/{passportId}/publish": {
+      "post": {
+        "tags": [
+          "Passports"
+        ],
+        "summary": "Publish a new signed version",
+        "x-access": "org:passport:publish",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "019a6f3e-5b7d-7e8a-9c21-7d4e5f6a8b90"
+            },
+            "required": true,
+            "name": "orgId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "passportId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Published",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Passport"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Role does not allow this",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflicts with existing data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/orgs/{orgId}/passports/{passportId}/withdraw": {
+      "post": {
+        "tags": [
+          "Passports"
+        ],
+        "summary": "Withdraw the public page (it shows a notice)",
+        "x-access": "org:passport:publish",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "019a6f3e-5b7d-7e8a-9c21-7d4e5f6a8b90"
+            },
+            "required": true,
+            "name": "orgId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "passportId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Withdrawn",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Passport"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Role does not allow this",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflicts with existing data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/orgs/{orgId}/passports/{passportId}/qr.svg": {
+      "get": {
+        "tags": [
+          "Passports"
+        ],
+        "summary": "QR code (SVG) for the page's GS1 Digital Link URL",
+        "x-access": "org",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "019a6f3e-5b7d-7e8a-9c21-7d4e5f6a8b90"
+            },
+            "required": true,
+            "name": "orgId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "passportId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "SVG",
+            "content": {
+              "image/svg+xml": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Role does not allow this",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflicts with existing data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/public/keys": {
+      "get": {
+        "tags": [
+          "Public"
+        ],
+        "summary": "Public keys that sign passports (current and previous)",
+        "x-access": "public",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicKeys"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/public/passports/{publicId}": {
+      "get": {
+        "tags": [
+          "Public"
+        ],
+        "summary": "A public page's signed data and live status",
+        "x-access": "public",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "pattern": "^[a-z0-9]{6,20}$"
+            },
+            "required": true,
+            "name": "publicId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "integer",
+              "exclusiveMinimum": 0
+            },
+            "required": false,
+            "name": "version",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PublicPassport"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many requests",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/public/verify/{publicId}": {
+      "get": {
+        "tags": [
+          "Public"
+        ],
+        "summary": "Check a public page's signature",
+        "x-access": "public",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "pattern": "^[a-z0-9]{6,20}$"
+            },
+            "required": true,
+            "name": "publicId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "integer",
+              "exclusiveMinimum": 0
+            },
+            "required": false,
+            "name": "version",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VerifyResult"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/public/directory": {
+      "get": {
+        "tags": [
+          "Public"
+        ],
+        "summary": "Search organisations that chose to be listed (query of 2+ characters, 50 results max)",
+        "x-access": "public",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 2,
+              "maxLength": 80
+            },
+            "required": true,
+            "name": "q",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/DirectoryEntry"
+                      }
+                    }
+                  },
+                  "required": [
+                    "items"
+                  ]
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Invalid input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/public/organisations/{organizationId}": {
+      "get": {
+        "tags": [
+          "Public"
+        ],
+        "summary": "A listed organisation and its public pages",
+        "x-access": "public",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "organizationId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "city": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "region": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "countryCode": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "businessRoles": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "website": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "description": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "verified": {
+                      "type": "boolean"
+                    },
+                    "passports": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "publicId": {
+                            "type": "string"
+                          },
+                          "productName": {
+                            "type": "string"
+                          },
+                          "lotCode": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "publicId",
+                          "productName",
+                          "lotCode"
+                        ]
+                      }
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "name",
+                    "city",
+                    "region",
+                    "countryCode",
+                    "businessRoles",
+                    "website",
+                    "description",
+                    "verified",
+                    "passports"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/public/p/{publicId}": {
+      "get": {
+        "tags": [
+          "Public"
+        ],
+        "summary": "The public product page (HTML, works without JavaScript)",
+        "x-access": "public",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "pattern": "^[a-z0-9]{6,20}$"
+            },
+            "required": true,
+            "name": "publicId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "en",
+                "it"
+              ]
+            },
+            "required": false,
+            "name": "lang",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "integer",
+              "exclusiveMinimum": 0
+            },
+            "required": false,
+            "name": "v",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "HTML",
+            "content": {
+              "text/html": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "text/html": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/public/directory-page": {
+      "get": {
+        "tags": [
+          "Public"
+        ],
+        "summary": "Directory search page (HTML)",
+        "x-access": "public",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "maxLength": 80
+            },
+            "required": false,
+            "name": "q",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "en",
+                "it"
+              ]
+            },
+            "required": false,
+            "name": "lang",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "HTML",
+            "content": {
+              "text/html": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/public/o/{organizationId}": {
+      "get": {
+        "tags": [
+          "Public"
+        ],
+        "summary": "Public organisation page (HTML)",
+        "x-access": "public",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "organizationId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "en",
+                "it"
+              ]
+            },
+            "required": false,
+            "name": "lang",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "integer",
+              "exclusiveMinimum": 0
+            },
+            "required": false,
+            "name": "v",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "HTML",
+            "content": {
+              "text/html": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "text/html": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/r/01/{gtin}/10/{lotCode}": {
+      "get": {
+        "tags": [
+          "Public"
+        ],
+        "summary": "GS1 Digital Link resolver: product + lot → public page",
+        "x-access": "public",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{8,14}$"
+            },
+            "required": true,
+            "name": "gtin",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "maxLength": 60
+            },
+            "required": true,
+            "name": "lotCode",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "302": {
+            "description": "Redirect to the page"
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/r/01/{gtin}": {
+      "get": {
+        "tags": [
+          "Public"
+        ],
+        "summary": "GS1 Digital Link resolver: product → public page",
+        "x-access": "public",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{8,14}$"
+            },
+            "required": true,
+            "name": "gtin",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "302": {
+            "description": "Redirect to the page"
+          },
+          "404": {
+            "description": "Not found",
             "content": {
               "application/json": {
                 "schema": {

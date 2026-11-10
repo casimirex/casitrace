@@ -5,6 +5,7 @@ import { createApp } from "./app";
 import { loadEnv } from "./config/env";
 import { createLogger } from "./infrastructure/logger";
 import { createAuth } from "./modules/identity/auth";
+import { createSigner } from "./modules/publication/domain/signing";
 
 const env = loadEnv();
 const logger = createLogger(env.LOG_LEVEL);
@@ -25,7 +26,17 @@ const auth = createAuth({
 });
 if (env.AUTH_RATE_LIMIT === "off") logger.warn("auth rate limiting is OFF (test configuration)");
 
-const app = createApp({ db, storage, logger, auth, version: pkg.version, webOrigin: env.WEB_ORIGIN });
+const signer = await createSigner(env.PASSPORT_SIGNING_KEY, env.PASSPORT_PREVIOUS_KEYS);
+logger.info({ kid: signer.kid }, "passport signing key loaded");
+const app = createApp({
+  db,
+  storage,
+  logger,
+  auth,
+  version: pkg.version,
+  webOrigin: env.WEB_ORIGIN,
+  publication: { signer, publicOrigin: env.PUBLIC_ORIGIN ?? env.WEB_ORIGIN },
+});
 const server = Bun.serve({ port: env.API_PORT, fetch: app.fetch });
 logger.info({ port: server.port }, "api listening");
 

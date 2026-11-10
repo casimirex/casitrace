@@ -13,6 +13,7 @@ import { evidenceRoutes } from "./modules/evidence/presentation/routes";
 import { exchangeRoutes } from "./modules/exchange/presentation/routes";
 import { AUTH_BASE_PATH } from "./modules/identity/auth";
 import { partiesRoutes } from "./modules/parties/presentation/routes";
+import { publicationRoutes } from "./modules/publication/presentation/routes";
 import { systemRoutes } from "./modules/system/routes";
 import { traceabilityRoutes } from "./modules/traceability/presentation/routes";
 
@@ -61,6 +62,7 @@ export const createApp = (deps: Deps) => {
   v1.route("/", evidenceRoutes(deps));
   v1.route("/", traceabilityRoutes(deps));
   v1.route("/", exchangeRoutes(deps));
+  v1.route("/", publicationRoutes(deps));
 
   const api = newRouter();
   api.route("/", systemRoutes(deps));

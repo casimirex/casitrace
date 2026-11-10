@@ -24,6 +24,7 @@ export const profileDto = (r: Row): ProfileDto => ({
   businessRoles: r.businessRoles as ProfileDto["businessRoles"],
   website: r.website,
   description: r.description,
+  publicListing: r.publicListing,
   verificationStatus: r.verificationStatus as ProfileDto["verificationStatus"],
   verificationNote: r.verificationNote,
   verificationRequestedAt: iso(r.verificationRequestedAt),
@@ -63,6 +64,7 @@ export const saveProfile = (
       businessRoles: [...new Set(input.businessRoles)],
       website: input.website ?? null,
       description: input.description ?? null,
+      publicListing: input.publicListing ?? false,
       ...(resetVerification
         ? {
             verificationStatus: "unverified",

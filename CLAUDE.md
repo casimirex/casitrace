@@ -95,6 +95,16 @@ Casitrace is a food traceability and evidence platform. The plan is `roadmap-v2.
 - A SHIP to a partner with `linkedOrgId` creates a handoff in the same transaction; voiding it is refused once accepted.
 - Notifications to another organisation: `notifyOrg()` (in-app + `notice` email).
 
+## Public layer (P7)
+
+- Module `apps/api/src/modules/publication`. A passport version is immutable: `buildSnapshot` → `PassportSnapshot.parse` (strict: unknown fields fail) → `canonicalize` → SHA-256 → Ed25519 signature (`domain/signing.ts`).
+- **Never add a field to the public snapshot without adding it to `PassportSnapshot` and a disclosure decision.** The publication tests scan every public response for private values (supplier/customer names, registration/VAT, notes, quantities, non-certificate documents); extend `PRIVATE` there when new private data appears.
+- Anonymous reads use only the views `public_passport_version` and `public_directory`, plus narrow live lookups (lot recall status, certificate status) for the published passport's own IDs.
+- Public HTML pages are server-rendered in `presentation/html.ts` (no JavaScript, escape everything with `esc`). Languages: `LANGS`; add strings to both dictionaries.
+- Public URLs: `/p/{publicId}` (page), `/01/{gtin14}/10/{lot}` (GS1 Digital Link → resolver), `/directory`, `/o/{orgId}`; the Vite dev proxy maps them to `/api/v1/public/*` and `/api/v1/r/*` (production: reverse proxy).
+- Signing key: `PASSPORT_SIGNING_KEY` (dev key in `.env.example`, refused in production); rotation adds the old public key to `PASSPORT_PREVIOUS_KEYS`. `scripts/verify-passport.mjs` verifies with Node built-ins only and must keep working.
+- Public endpoints are rate limited in memory per IP (`platform/rate-limit.ts`).
+
 ## Auth (ADR 0009)
 
 - Better Auth handles sign-up, verification, sessions, password reset, organisations, invitations and TOTP at `/api/v1/auth`. Do not re-implement these.

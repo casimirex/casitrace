@@ -37,6 +37,8 @@ export const ProfileInput = z
     businessRoles: z.array(z.enum(BUSINESS_ROLES)).min(1).max(BUSINESS_ROLES.length),
     website: z.url().max(300).optional().nullable(),
     description: optText(2000),
+    /** List the organisation in the public directory (opt-in). */
+    publicListing: z.boolean().default(false),
   })
   .openapi("ProfileInput");
 
