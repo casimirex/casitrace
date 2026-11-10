@@ -1,4 +1,4 @@
-import type { Prisma, Tx } from "@casitrace/db";
+import type { Db, Prisma, Tx } from "@casitrace/db";
 import { newId } from "@casitrace/shared";
 
 export type ActorType = "user" | "system" | "api_client";
@@ -22,7 +22,7 @@ export interface CommandContext {
 }
 
 /** Appends audit rows. The table rejects UPDATE/DELETE (ADR 0007). */
-export const writeAudit = async (tx: Tx, ctx: CommandContext, entries: AuditEntry[]): Promise<void> => {
+export const writeAudit = async (tx: Tx | Db, ctx: CommandContext, entries: AuditEntry[]): Promise<void> => {
   await tx.auditLog.createMany({
     data: entries.map((e) => ({
       id: newId(),

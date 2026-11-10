@@ -40,8 +40,8 @@ jobs:
       - name: Typecheck
         run: bun run typecheck
 
-      - name: Migrations apply to a fresh database
-        run: bun run db:deploy
+      - name: Database setup (migrations as owner, runtime role login, test database)
+        run: bun run db:setup
 
       - name: Unit and integration tests
         run: bun run test

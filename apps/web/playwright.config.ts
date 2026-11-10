@@ -1,6 +1,6 @@
 import { defineConfig, devices } from "@playwright/test";
 
-// Starts the API and the web dev server, then runs browser smoke tests against them.
+// Starts the API, the worker (it sends the emails the flows depend on) and the web dev server.
 export default defineConfig({
   testDir: "./e2e",
   testMatch: "**/*.e2e.ts",
@@ -12,7 +12,13 @@ export default defineConfig({
   webServer: [
     {
       command: "bun --cwd ../api --env-file=../../.env src/main.ts",
-      url: "http://localhost:3000/health",
+      url: "http://localhost:3000/api/health",
+      reuseExistingServer: !process.env.CI,
+      timeout: 60_000,
+    },
+    {
+      command: "bun --cwd ../worker --env-file=../../.env src/main.ts",
+      wait: { stdout: /worker started/ },
       reuseExistingServer: !process.env.CI,
       timeout: 60_000,
     },

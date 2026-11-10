@@ -94,6 +94,301 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/v1/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The signed-in user and their organisations */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Me"];
+                    };
+                };
+                /** @description Not signed in */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/me/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Download all personal data held about the signed-in user (GDPR access) */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["AccountExport"];
+                    };
+                };
+                /** @description Not signed in */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/orgs/{orgId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** An organisation the user belongs to, with their role and permissions */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    orgId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["Organisation"];
+                    };
+                };
+                /** @description Not signed in */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/orgs/{orgId}/audit-log": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The organisation's audit log, newest first */
+        get: {
+            parameters: {
+                query?: {
+                    limit?: number;
+                    cursor?: string;
+                };
+                header?: never;
+                path: {
+                    orgId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["AuditPage"];
+                    };
+                };
+                /** @description Not signed in */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Role lacks audit:read */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/v1/platform/organizations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** All organisations (platform staff; two-factor required; access is audited) */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description OK */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PlatformOrganisationList"];
+                    };
+                };
+                /** @description Not signed in */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Two-factor authentication not enabled */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+                /** @description Not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorEnvelope"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -133,6 +428,124 @@ export interface components {
                 }[];
                 requestId: string;
             };
+        };
+        Me: {
+            user: {
+                /**
+                 * Format: uuid
+                 * @example 019a6f3e-5b7d-7e8a-9c21-7d4e5f6a8b90
+                 */
+                id: string;
+                name: string;
+                /** Format: email */
+                email: string;
+                emailVerified: boolean;
+                twoFactorEnabled: boolean;
+                platformRole: string | null;
+            };
+            memberships: {
+                organization: {
+                    /**
+                     * Format: uuid
+                     * @example 019a6f3e-5b7d-7e8a-9c21-7d4e5f6a8b90
+                     */
+                    id: string;
+                    name: string;
+                    slug: string;
+                };
+                role: string;
+            }[];
+        };
+        AccountExport: {
+            /** Format: date-time */
+            exportedAt: string;
+            user: {
+                [key: string]: unknown;
+            };
+            signInMethods: {
+                providerId: string;
+                /** Format: date-time */
+                createdAt: string;
+            }[];
+            sessions: {
+                /** Format: date-time */
+                createdAt: string;
+                /** Format: date-time */
+                expiresAt: string;
+                ipAddress: string | null;
+                userAgent: string | null;
+            }[];
+            memberships: {
+                /**
+                 * Format: uuid
+                 * @example 019a6f3e-5b7d-7e8a-9c21-7d4e5f6a8b90
+                 */
+                organisationId: string;
+                organisationName: string;
+                role: string;
+                /** Format: date-time */
+                since: string;
+            }[];
+            activity: components["schemas"]["AuditEntry"][];
+        };
+        AuditEntry: {
+            /**
+             * Format: uuid
+             * @example 019a6f3e-5b7d-7e8a-9c21-7d4e5f6a8b90
+             */
+            id: string;
+            /** Format: date-time */
+            occurredAt: string;
+            action: string;
+            actorType: string;
+            /**
+             * Format: uuid
+             * @example 019a6f3e-5b7d-7e8a-9c21-7d4e5f6a8b90
+             */
+            actorId: string | null;
+            resourceType: string;
+            /**
+             * Format: uuid
+             * @example 019a6f3e-5b7d-7e8a-9c21-7d4e5f6a8b90
+             */
+            resourceId: string | null;
+            requestId: string | null;
+            data?: unknown;
+        };
+        Organisation: {
+            /**
+             * Format: uuid
+             * @example 019a6f3e-5b7d-7e8a-9c21-7d4e5f6a8b90
+             */
+            id: string;
+            name: string;
+            slug: string;
+            /** Format: date-time */
+            createdAt: string;
+            myRole: string;
+            myPermissions: string[];
+        };
+        AuditPage: {
+            items: components["schemas"]["AuditEntry"][];
+            /**
+             * Format: uuid
+             * @example 019a6f3e-5b7d-7e8a-9c21-7d4e5f6a8b90
+             */
+            nextCursor: string | null;
+        };
+        PlatformOrganisationList: {
+            items: {
+                /**
+                 * Format: uuid
+                 * @example 019a6f3e-5b7d-7e8a-9c21-7d4e5f6a8b90
+                 */
+                id: string;
+                name: string;
+                slug: string;
+                /** Format: date-time */
+                createdAt: string;
+                memberCount: number;
+            }[];
         };
     };
     responses: never;

@@ -1,9 +1,15 @@
 {
   "openapi": "3.1.0",
+  "servers": [
+    {
+      "url": "/api",
+      "description": "Same origin as the web app"
+    }
+  ],
   "info": {
     "title": "Casitrace API",
     "version": "v1",
-    "description": "Food traceability and evidence API. Versioned under /v1; /health and /ready are unversioned."
+    "description": "Food traceability and evidence API, served under /api. Business routes are versioned under /api/v1. Authentication endpoints (Better Auth) live under /api/v1/auth. Each operation's `x-access` states who may call it."
   },
   "components": {
     "schemas": {
@@ -143,6 +149,354 @@
         "required": [
           "error"
         ]
+      },
+      "Me": {
+        "type": "object",
+        "properties": {
+          "user": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid",
+                "example": "019a6f3e-5b7d-7e8a-9c21-7d4e5f6a8b90"
+              },
+              "name": {
+                "type": "string"
+              },
+              "email": {
+                "type": "string",
+                "format": "email"
+              },
+              "emailVerified": {
+                "type": "boolean"
+              },
+              "twoFactorEnabled": {
+                "type": "boolean"
+              },
+              "platformRole": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "email",
+              "emailVerified",
+              "twoFactorEnabled",
+              "platformRole"
+            ]
+          },
+          "memberships": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "organization": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid",
+                      "example": "019a6f3e-5b7d-7e8a-9c21-7d4e5f6a8b90"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "slug": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "name",
+                    "slug"
+                  ]
+                },
+                "role": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "organization",
+                "role"
+              ]
+            }
+          }
+        },
+        "required": [
+          "user",
+          "memberships"
+        ]
+      },
+      "AccountExport": {
+        "type": "object",
+        "properties": {
+          "exportedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "user": {
+            "type": "object",
+            "additionalProperties": {}
+          },
+          "signInMethods": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "providerId": {
+                  "type": "string"
+                },
+                "createdAt": {
+                  "type": "string",
+                  "format": "date-time"
+                }
+              },
+              "required": [
+                "providerId",
+                "createdAt"
+              ]
+            }
+          },
+          "sessions": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "createdAt": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "expiresAt": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "ipAddress": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "userAgent": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                }
+              },
+              "required": [
+                "createdAt",
+                "expiresAt",
+                "ipAddress",
+                "userAgent"
+              ]
+            }
+          },
+          "memberships": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "organisationId": {
+                  "type": "string",
+                  "format": "uuid",
+                  "example": "019a6f3e-5b7d-7e8a-9c21-7d4e5f6a8b90"
+                },
+                "organisationName": {
+                  "type": "string"
+                },
+                "role": {
+                  "type": "string"
+                },
+                "since": {
+                  "type": "string",
+                  "format": "date-time"
+                }
+              },
+              "required": [
+                "organisationId",
+                "organisationName",
+                "role",
+                "since"
+              ]
+            }
+          },
+          "activity": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AuditEntry"
+            }
+          }
+        },
+        "required": [
+          "exportedAt",
+          "user",
+          "signInMethods",
+          "sessions",
+          "memberships",
+          "activity"
+        ]
+      },
+      "AuditEntry": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "example": "019a6f3e-5b7d-7e8a-9c21-7d4e5f6a8b90"
+          },
+          "occurredAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "action": {
+            "type": "string"
+          },
+          "actorType": {
+            "type": "string"
+          },
+          "actorId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid",
+            "example": "019a6f3e-5b7d-7e8a-9c21-7d4e5f6a8b90"
+          },
+          "resourceType": {
+            "type": "string"
+          },
+          "resourceId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid",
+            "example": "019a6f3e-5b7d-7e8a-9c21-7d4e5f6a8b90"
+          },
+          "requestId": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "data": {}
+        },
+        "required": [
+          "id",
+          "occurredAt",
+          "action",
+          "actorType",
+          "actorId",
+          "resourceType",
+          "resourceId",
+          "requestId"
+        ]
+      },
+      "Organisation": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "example": "019a6f3e-5b7d-7e8a-9c21-7d4e5f6a8b90"
+          },
+          "name": {
+            "type": "string"
+          },
+          "slug": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "myRole": {
+            "type": "string"
+          },
+          "myPermissions": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "slug",
+          "createdAt",
+          "myRole",
+          "myPermissions"
+        ]
+      },
+      "AuditPage": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AuditEntry"
+            }
+          },
+          "nextCursor": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid",
+            "example": "019a6f3e-5b7d-7e8a-9c21-7d4e5f6a8b90"
+          }
+        },
+        "required": [
+          "items",
+          "nextCursor"
+        ]
+      },
+      "PlatformOrganisationList": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "format": "uuid",
+                  "example": "019a6f3e-5b7d-7e8a-9c21-7d4e5f6a8b90"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "slug": {
+                  "type": "string"
+                },
+                "createdAt": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "memberCount": {
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "id",
+                "name",
+                "slug",
+                "createdAt",
+                "memberCount"
+              ]
+            }
+          }
+        },
+        "required": [
+          "items"
+        ]
       }
     },
     "parameters": {}
@@ -150,6 +504,7 @@
   "paths": {
     "/health": {
       "get": {
+        "x-access": "public",
         "tags": [
           "System"
         ],
@@ -170,6 +525,7 @@
     },
     "/ready": {
       "get": {
+        "x-access": "public",
         "tags": [
           "System"
         ],
@@ -201,6 +557,276 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ReadinessResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/me": {
+      "get": {
+        "tags": [
+          "Account"
+        ],
+        "summary": "The signed-in user and their organisations",
+        "x-access": "user",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Me"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/me/export": {
+      "get": {
+        "tags": [
+          "Account"
+        ],
+        "summary": "Download all personal data held about the signed-in user (GDPR access)",
+        "x-access": "user",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AccountExport"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/orgs/{orgId}": {
+      "get": {
+        "tags": [
+          "Organisations"
+        ],
+        "summary": "An organisation the user belongs to, with their role and permissions",
+        "x-access": "org",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "019a6f3e-5b7d-7e8a-9c21-7d4e5f6a8b90"
+            },
+            "required": true,
+            "name": "orgId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Organisation"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/orgs/{orgId}/audit-log": {
+      "get": {
+        "tags": [
+          "Organisations"
+        ],
+        "summary": "The organisation's audit log, newest first",
+        "x-access": "org:audit:read",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "019a6f3e-5b7d-7e8a-9c21-7d4e5f6a8b90"
+            },
+            "required": true,
+            "name": "orgId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 50
+            },
+            "required": false,
+            "name": "limit",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "example": "019a6f3e-5b7d-7e8a-9c21-7d4e5f6a8b90"
+            },
+            "required": false,
+            "name": "cursor",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuditPage"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Role lacks audit:read",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/platform/organizations": {
+      "get": {
+        "tags": [
+          "Platform"
+        ],
+        "summary": "All organisations (platform staff; two-factor required; access is audited)",
+        "x-access": "platform:super_admin|support",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlatformOrganisationList"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Two-factor authentication not enabled",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorEnvelope"
                 }
               }
             }

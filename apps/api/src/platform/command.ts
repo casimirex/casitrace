@@ -14,7 +14,8 @@ export interface CommandOutcome<R> {
 
 /**
  * Runs a state-changing command in one database transaction: the handler's writes, its audit records
- * and its outbox events commit together or not at all.
+ * and its outbox events commit together or not at all. When ctx.orgId is set, the transaction is
+ * scoped to that organisation for row-level security (ADR 0008).
  */
 export const runCommand = async <R>(
   db: Db,
@@ -22,6 +23,7 @@ export const runCommand = async <R>(
   handler: (tx: Tx) => Promise<CommandOutcome<R>>,
 ): Promise<R> =>
   db.$transaction(async (tx) => {
+    if (ctx.orgId) await tx.$executeRaw`SELECT set_config('app.org_id', ${ctx.orgId}, true)`;
     const outcome = await handler(tx);
     await writeAudit(tx, ctx, outcome.audit);
     await enqueueEvents(tx, ctx.orgId, outcome.events ?? []);

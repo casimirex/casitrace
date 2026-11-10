@@ -6,6 +6,8 @@ const EnvSchema = z.object({
   LOG_LEVEL: z.enum(["fatal", "error", "warn", "info", "debug", "trace", "silent"]).default("info"),
   API_PORT: z.coerce.number().int().positive().default(3000),
   DATABASE_URL: z.url(),
+  WEB_ORIGIN: z.url(),
+  AUTH_SECRET: z.string().min(32, "AUTH_SECRET must be at least 32 characters"),
   S3_ENDPOINT: z.url(),
   S3_REGION: z.string().min(1),
   S3_BUCKET: z.string().min(3),

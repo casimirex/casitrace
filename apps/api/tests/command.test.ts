@@ -2,15 +2,24 @@ import { afterAll, describe, expect, test } from "bun:test";
 import { newId } from "@casitrace/shared";
 import type { CommandContext } from "../src/platform/audit";
 import { runCommand } from "../src/platform/command";
+import { withPlatformAccess, withTenant } from "../src/platform/tenant";
 import { db } from "./helpers";
 
 afterAll(() => db.$disconnect());
 
-const ctx = (): CommandContext => ({
+const ctx = (orgId: string = newId()): CommandContext => ({
   actor: { type: "system", id: null },
-  orgId: newId(),
+  orgId,
   requestId: newId(),
 });
+// Prisma returns lazy thenables; Promise.resolve turns them into real promises for expect().rejects.
+const run = <T>(p: PromiseLike<T>) => Promise.resolve(p);
+
+const touch = (c: CommandContext, action = "sample.touched") =>
+  runCommand(db, c, async () => ({
+    result: null,
+    audit: [{ action, resourceType: "sample", resourceId: null }],
+  }));
 
 describe("runCommand", () => {
   test("commits the audit record and outbox event together with the result", async () => {
@@ -30,7 +39,9 @@ describe("runCommand", () => {
     }));
 
     expect(result).toEqual({ ok: true });
-    const audit = await db.auditLog.findMany({ where: { requestId: c.requestId } });
+    const audit = await withTenant(db, c.orgId ?? "", (tx) =>
+      tx.auditLog.findMany({ where: { requestId: c.requestId } }),
+    );
     expect(audit).toHaveLength(1);
     expect(audit[0]).toMatchObject({
       orgId: c.orgId,
@@ -61,27 +72,58 @@ describe("runCommand", () => {
       }),
     ).rejects.toThrow("business rule violated");
 
-    expect(await db.auditLog.count({ where: { requestId: c.requestId } })).toBe(0);
+    expect(
+      await withPlatformAccess(db, (tx) => tx.auditLog.count({ where: { requestId: c.requestId } })),
+    ).toBe(0);
     expect(await db.outboxEvent.count({ where: { aggregateId: resourceId } })).toBe(0);
   });
 });
 
 describe("audit log is append-only (ADR 0007)", () => {
-  test("UPDATE, DELETE and TRUNCATE are rejected by the database", async () => {
+  test("the runtime role cannot UPDATE, DELETE or TRUNCATE it", async () => {
     const c = ctx();
-    await runCommand(db, c, async () => ({
-      result: null,
-      audit: [{ action: "sample.touched", resourceType: "sample", resourceId: null }],
-    }));
-    const row = await db.auditLog.findFirstOrThrow({ where: { requestId: c.requestId } });
+    await touch(c);
+    const row = await withTenant(db, c.orgId ?? "", (tx) =>
+      tx.auditLog.findFirstOrThrow({ where: { requestId: c.requestId } }),
+    );
 
-    // Prisma returns lazy thenables; Promise.resolve turns them into real promises for expect().rejects.
-    const run = <T>(p: PromiseLike<T>) => Promise.resolve(p);
+    const denied = /append-only|permission denied/;
     await expect(
-      run(db.auditLog.update({ where: { id: row.id }, data: { action: "tampered" } })),
-    ).rejects.toThrow(/append-only/);
-    await expect(run(db.auditLog.delete({ where: { id: row.id } }))).rejects.toThrow(/append-only/);
-    await expect(run(db.$executeRawUnsafe('TRUNCATE "audit_log"'))).rejects.toThrow(/append-only/);
-    expect((await db.auditLog.findUniqueOrThrow({ where: { id: row.id } })).action).toBe("sample.touched");
+      withTenant(db, c.orgId ?? "", (tx) =>
+        tx.auditLog.update({ where: { id: row.id }, data: { action: "x" } }),
+      ),
+    ).rejects.toThrow(denied);
+    await expect(
+      withTenant(db, c.orgId ?? "", (tx) => tx.auditLog.delete({ where: { id: row.id } })),
+    ).rejects.toThrow(denied);
+    await expect(run(db.$executeRawUnsafe('TRUNCATE "audit_log"'))).rejects.toThrow(denied);
+  });
+});
+
+describe("row-level security on the audit log (ADR 0008)", () => {
+  test("each organisation sees only its own rows; no scope sees nothing", async () => {
+    const a = ctx();
+    const b = ctx();
+    await touch(a, "sample.a");
+    await touch(b, "sample.b");
+    const both = { requestId: { in: [a.requestId ?? "", b.requestId ?? ""] } };
+
+    const seenByA = await withTenant(db, a.orgId ?? "", (tx) => tx.auditLog.findMany({ where: both }));
+    expect(seenByA.map((r) => r.action)).toEqual(["sample.a"]);
+    const seenByB = await withTenant(db, b.orgId ?? "", (tx) => tx.auditLog.findMany({ where: both }));
+    expect(seenByB.map((r) => r.action)).toEqual(["sample.b"]);
+    expect(await db.auditLog.count({ where: both })).toBe(0);
+    expect(await withPlatformAccess(db, (tx) => tx.auditLog.count({ where: both }))).toBe(2);
+  });
+
+  test("the runtime role is not the table owner and cannot bypass RLS", async () => {
+    const [role] = await db.$queryRaw<{ current_user: string; bypass: boolean; owner: string }[]>`
+      SELECT current_user, r.rolbypassrls AS bypass, pg_get_userbyid(c.relowner) AS owner
+      FROM pg_roles r, pg_class c WHERE r.rolname = current_user AND c.relname = 'audit_log'`;
+    expect(role).toMatchObject({ current_user: "casitrace_app", bypass: false });
+    expect(role?.owner).not.toBe("casitrace_app");
+    await expect(
+      run(db.$executeRawUnsafe('DROP TRIGGER audit_log_append_only ON "audit_log"')),
+    ).rejects.toThrow(/must be owner/);
   });
 });

@@ -1,6 +1,7 @@
 import { createDb } from "@casitrace/db";
 import pino from "pino";
 import { bossSink, createBoss, ensureQueues, startConsumers } from "./boss";
+import { createEmailHandler } from "./email/sender";
 import { loadWorkerEnv } from "./env";
 import { EventRegistry } from "./events";
 import { relayOutboxBatch } from "./outbox-relay";
@@ -11,8 +12,18 @@ const db = createDb({ url: env.DATABASE_URL, max: 5 });
 const boss = createBoss(env.DATABASE_URL);
 boss.on("error", (err) => logger.error({ err }, "pg-boss error"));
 
-// Modules register event handlers here from P2 onward.
-const registry = new EventRegistry();
+const registry = new EventRegistry().on(
+  "email.requested",
+  createEmailHandler(
+    {
+      host: env.SMTP_HOST,
+      port: env.SMTP_PORT,
+      from: env.MAIL_FROM,
+      ...(env.SMTP_USER ? { user: env.SMTP_USER, pass: env.SMTP_PASSWORD ?? "" } : {}),
+    },
+    db,
+  ),
+);
 
 await boss.start();
 await ensureQueues(boss);

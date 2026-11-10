@@ -18,15 +18,15 @@ Food traceability and evidence platform: trace any lot upstream and downstream a
 cp .env.example .env
 docker compose up -d --wait && docker compose up s3-init
 bun install
-bun run db:deploy
+bun run db:setup
 bun run dev
 ```
 
 | URL | What |
 |---|---|
 | http://localhost:5173 | Web app |
-| http://localhost:3000/docs | API docs (Swagger UI) |
-| http://localhost:3000/ready | Readiness (database + storage) |
+| http://localhost:5173/api/docs | API docs (Swagger UI) |
+| http://localhost:5173/api/ready | Readiness (database + storage) |
 | http://localhost:8025 | Mailpit (captured email) |
 
 ## Checks

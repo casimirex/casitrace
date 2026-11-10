@@ -3,6 +3,7 @@ import path from "node:path";
 import type { Db } from "@casitrace/db";
 import pino from "pino";
 import { API_INFO, createApp } from "../src/app";
+import type { Deps } from "../src/context";
 import type { ObjectStorage } from "../src/infrastructure/storage";
 
 const unused = new Proxy(
@@ -16,10 +17,13 @@ const unused = new Proxy(
 const app = createApp({
   db: unused as Db,
   storage: unused as ObjectStorage,
+  auth: unused as Deps["auth"],
   logger: pino({ level: "silent" }),
   version: "0.0.0",
+  webOrigin: "http://localhost:5173",
 });
-const doc = app.getOpenAPI31Document(API_INFO);
+const res = await app.request("/api/openapi.json");
+const doc = await res.json();
 const out = path.resolve(import.meta.dirname, "../../../packages/api-client/openapi.json");
 await Bun.write(out, `${JSON.stringify(doc, null, 2)}\n`);
-console.log(`wrote ${out}`);
+console.log(`wrote ${out} (${API_INFO.info.title})`);

@@ -5,6 +5,7 @@ import type { AppEnv, Deps } from "../../context";
 const health = createRoute({
   method: "get",
   path: "/health",
+  "x-access": "public",
   tags: ["System"],
   summary: "Liveness: the process is up",
   responses: { 200: { description: "Alive", content: { "application/json": { schema: HealthResponse } } } },
@@ -13,6 +14,7 @@ const health = createRoute({
 const ready = createRoute({
   method: "get",
   path: "/ready",
+  "x-access": "public",
   tags: ["System"],
   summary: "Readiness: database and object storage are reachable",
   responses: {

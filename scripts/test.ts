@@ -3,13 +3,15 @@
 import { $ } from "bun";
 
 const testDbUrl = process.env.TEST_DATABASE_URL;
-if (!testDbUrl) throw new Error("TEST_DATABASE_URL is not set (copy .env.example to .env)");
+const testMigrateUrl = process.env.TEST_MIGRATE_DATABASE_URL;
+if (!testDbUrl || !testMigrateUrl) throw new Error("TEST_DATABASE_URL / TEST_MIGRATE_DATABASE_URL not set");
 
 const env = {
   ...process.env,
   NODE_ENV: "test",
   LOG_LEVEL: "silent",
   DATABASE_URL: testDbUrl,
+  MIGRATE_DATABASE_URL: testMigrateUrl,
   S3_BUCKET: process.env.TEST_S3_BUCKET ?? "casitrace-evidence-test",
 };
 

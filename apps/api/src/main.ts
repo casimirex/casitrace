@@ -4,6 +4,7 @@ import { createApp } from "./app";
 import { loadEnv } from "./config/env";
 import { createLogger } from "./infrastructure/logger";
 import { createS3Storage } from "./infrastructure/storage";
+import { createAuth } from "./modules/identity/auth";
 
 const env = loadEnv();
 const logger = createLogger(env.LOG_LEVEL);
@@ -15,8 +16,9 @@ const storage = createS3Storage({
   accessKeyId: env.S3_ACCESS_KEY_ID,
   secretAccessKey: env.S3_SECRET_ACCESS_KEY,
 });
+const auth = createAuth({ db, logger, secret: env.AUTH_SECRET, webOrigin: env.WEB_ORIGIN });
 
-const app = createApp({ db, storage, logger, version: pkg.version });
+const app = createApp({ db, storage, logger, auth, version: pkg.version, webOrigin: env.WEB_ORIGIN });
 const server = Bun.serve({ port: env.API_PORT, fetch: app.fetch });
 logger.info({ port: server.port }, "api listening");
 
