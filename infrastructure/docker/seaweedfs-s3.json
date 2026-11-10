@@ -1,0 +1,9 @@
+{
+  "identities": [
+    {
+      "name": "casitrace",
+      "credentials": [{ "accessKey": "casitrace", "secretKey": "casitrace-dev-secret" }],
+      "actions": ["Admin", "Read", "Write", "List", "Tagging"]
+    }
+  ]
+}

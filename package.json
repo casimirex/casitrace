@@ -1,0 +1,28 @@
+{
+  "name": "casitrace",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "postinstall": "bun run db:generate",
+    "dev": "bun run --filter '@casitrace/api' --filter '@casitrace/worker' --filter '@casitrace/web' dev",
+    "build": "bun run --filter '*' build",
+    "typecheck": "bun run --filter '*' typecheck",
+    "lint": "biome check .",
+    "format": "biome format --write .",
+    "db:generate": "bun run --filter '@casitrace/db' generate",
+    "db:migrate": "bun run --filter '@casitrace/db' migrate:dev",
+    "db:deploy": "bun run --filter '@casitrace/db' migrate:deploy",
+    "test": "bun scripts/test.ts",
+    "openapi": "bun run --filter '@casitrace/api' openapi && bun run --filter '@casitrace/api-client' generate",
+    "e2e": "bun run --filter '@casitrace/web' e2e"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.6.3",
+    "@types/bun": "1.4.4",
+    "typescript": "5.9.3"
+  }
+}

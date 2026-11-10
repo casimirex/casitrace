@@ -1,0 +1,12 @@
+# Regulatory fact sheet — UNVERIFIED
+
+Each row was written from memory on 2026-11-10 and must be checked against the official source before anything is built on it. Record the source URL and check date when verified.
+
+| Topic               | Statement to verify                                                                                                                                                                          | Impact                                             | Verified (date, source) |
+| ------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------- | ----------------------- |
+| EU ESPR DPP         | Reg. (EU) 2024/1781 excludes food and feed from the DPP regime.                                                                                                                              | Do not claim ESPR compliance for food passports.   |                         |
+| EU General Food Law | Reg. (EC) 178/2002 Art. 18: one-step-back / one-step-forward traceability. Reg. (EU) 931/2011 adds detail for food of animal origin.                                                         | P5 + P6 data model; first EU adapter.              |                         |
+| EUDR                | Reg. (EU) 2023/1115; application dates postponed more than once; simplification review pending. Commodities: cattle, cocoa, coffee, oil palm, rubber, soya, wood. Requires plot geolocation. | Only if the pilot commodity is in scope.           |                         |
+| US FSMA 204         | Food Traceability Rule (21 CFR Part 1 Subpart S); compliance date extended (reported July 2028); KDE/CTE records; sortable spreadsheet within 24 h.                                          | P5 event model and trace report.                   |                         |
+| GS1                 | Digital Link URI syntax; EPCIS 2.0 / CBV 2.0.                                                                                                                                                | ADR 0005; P13.                                     |                         |
+| GDPR                | Sole-trader farms and farm geolocation may be personal data.                                                                                                                                 | P2 export/erasure; P7 disclosure defaults; P9 DPA. |                         |
