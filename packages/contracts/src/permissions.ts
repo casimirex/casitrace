@@ -15,6 +15,8 @@ export const statements = {
   product: ["create", "update", "archive"],
   import: ["run"],
   evidence: ["create", "update", "verify"],
+  event: ["record", "void", "override"],
+  lot: ["hold"],
 } as const;
 
 export const ac = createAccessControl(statements);
@@ -33,6 +35,8 @@ export const roles = {
     product: ["create", "update", "archive"],
     import: ["run"],
     evidence: ["create", "update", "verify"],
+    event: ["record", "void", "override"],
+    lot: ["hold"],
   }),
   admin: ac.newRole({
     organization: ["update"],
@@ -44,6 +48,8 @@ export const roles = {
     product: ["create", "update", "archive"],
     import: ["run"],
     evidence: ["create", "update", "verify"],
+    event: ["record", "void", "override"],
+    lot: ["hold"],
   }),
   // Operators maintain master data and capture events; they cannot archive or manage people.
   operator: ac.newRole({
@@ -52,10 +58,13 @@ export const roles = {
     product: ["create", "update"],
     import: ["run"],
     evidence: ["create", "update"],
+    // Operators record and correct events but cannot override mass balance.
+    event: ["record", "void"],
   }),
   // Reviewers (quality staff) handle evidence and decide whether it is verified.
   reviewer: ac.newRole({
     evidence: ["create", "update", "verify"],
+    lot: ["hold"],
   }),
   viewer: ac.newRole({}),
 } satisfies Record<RoleName, unknown>;

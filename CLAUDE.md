@@ -74,6 +74,17 @@ Casitrace is a food traceability and evidence platform. The plan is `roadmap-v2.
 - Worker jobs that span organisations set `app.platform_access` and must keep writes inside the event's `org_id`.
 - Integration tests call the worker's scan handler directly against the real ClamAV (`docker compose` service `clamav`).
 
+## Traceability (P5)
+
+- Module `apps/api/src/modules/traceability`. Events (`trace_event`, `trace_event_line`) and genealogy (`lot_edge`) are append-only; `lot.quantity`/`status` are a projection.
+- Record events only through `recordEventTx` (inside `runCommand`); it validates shape (`domain/event-rules.ts`), KDEs (`KDE_SCHEMAS` in contracts, versioned labels), references, balances (input lots locked `FOR UPDATE`), units, and mass balance (`domain/mass-balance.ts`, 2 % tolerance; override needs `event:override` and a reason).
+- After any write that touches lot lines, call `recomputeLots` for the affected lots; never set quantities by hand.
+- Corrections: `voidEvent` (optionally with a replacement in the same transaction). Refused while later events use the voided event's outputs. Voided lots keep their code; a replacement may reuse it (partial unique index).
+- Every query on events/edges must exclude voided events: `NOT EXISTS (SELECT 1 FROM trace_event v WHERE v.voids_event_id = <event id>)`.
+- Quantities: `decimal.js` via `domain/quantity.ts`; API uses decimal strings. Conversions to kg use the lot's product version conversions.
+- KDE changes: add a new schema label (e.g. `transform.milling@2`); never edit a released schema.
+- Tests: `traceability-properties.test.ts` (seeded random sequences + invariants) and `traceability-performance.test.ts` (NFR) must stay green.
+
 ## Auth (ADR 0009)
 
 - Better Auth handles sign-up, verification, sessions, password reset, organisations, invitations and TOTP at `/api/v1/auth`. Do not re-implement these.

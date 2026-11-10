@@ -521,3 +521,101 @@ model Notification {
   @@index([userId, readAt, createdAt])
   @@map("notification")
 }
+
+// ─── traceability (P5) ──────────────────────────────────────────────────────
+// Events are the source of truth (append-only, ADR 0007). Lot quantity/status are a projection
+// recomputed from non-voided event lines. Genealogy edges are written with the event.
+
+/// A quantity of one product version (a batch). Quantity and status are maintained from events.
+model Lot {
+  id               String   @id @db.Uuid
+  orgId            String   @map("org_id") @db.Uuid
+  productId        String   @map("product_id") @db.Uuid
+  productVersionId String   @map("product_version_id") @db.Uuid
+  lotCode          String   @map("lot_code")
+  uomCode          String   @map("uom_code")
+  /// Current balance in uom_code (projection of event lines).
+  quantity         Decimal  @default(0) @db.Decimal(18, 6)
+  /// Quantity first created (outputs of the creating event).
+  initialQuantity  Decimal  @map("initial_quantity") @db.Decimal(18, 6)
+  /// active | consumed | shipped | on_hold | recalled | voided
+  status           String   @default("active")
+  holdReason       String?  @map("hold_reason")
+  locationId       String?  @map("location_id") @db.Uuid
+  createdByEventId String   @map("created_by_event_id") @db.Uuid
+  createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt        DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  /// Lot codes are unique among non-voided lots (partial unique index in SQL), so a corrected
+  /// event can reuse the code of the lot it replaces.
+  @@index([orgId, productId, lotCode])
+  @@index([orgId, status])
+  @@index([orgId, lotCode])
+  @@map("lot")
+}
+
+/// Something that happened to lots. Never updated or deleted; corrected by a VOID event.
+model TraceEvent {
+  id             String   @id @db.Uuid
+  orgId          String   @map("org_id") @db.Uuid
+  /// ORIGINATE | RECEIVE | TRANSFORM | SHIP | ADJUST | VOID
+  type           String
+  /// harvest | milling | blending | bottling | split | other (TRANSFORM/ORIGINATE detail)
+  process        String?
+  /// Business time: when it happened.
+  occurredAt     DateTime @map("occurred_at") @db.Timestamptz(3)
+  /// System time: when it was recorded.
+  recordedAt     DateTime @default(now()) @map("recorded_at") @db.Timestamptz(3)
+  locationId     String?  @map("location_id") @db.Uuid
+  partnerId      String?  @map("partner_id") @db.Uuid
+  kdes           Json
+  kdeSchema      String   @map("kde_schema")
+  note           String?
+  /// For VOID: the event it voids.
+  voidsEventId   String?  @unique @map("voids_event_id") @db.Uuid
+  /// Set when mass balance failed and someone with event:override accepted it.
+  overrideReason String?  @map("override_reason")
+  /// Inputs/outputs in kg at the time of recording (for audit of the mass-balance decision).
+  massBalance    Json?    @map("mass_balance")
+  idempotencyKey String?  @map("idempotency_key")
+  requestHash    String?  @map("request_hash")
+  actorId        String?  @map("actor_id") @db.Uuid
+
+  lines TraceEventLine[]
+
+  @@unique([orgId, idempotencyKey])
+  @@index([orgId, occurredAt])
+  @@index([orgId, type])
+  @@map("trace_event")
+}
+
+/// One lot's part in an event. role: input (consumed/shipped) | output (created) | adjust (signed delta).
+model TraceEventLine {
+  id       String  @id @db.Uuid
+  orgId    String  @map("org_id") @db.Uuid
+  eventId  String  @map("event_id") @db.Uuid
+  lotId    String  @map("lot_id") @db.Uuid
+  role     String
+  quantity Decimal @db.Decimal(18, 6)
+  uomCode  String  @map("uom_code")
+
+  event TraceEvent @relation(fields: [eventId], references: [id], onDelete: Restrict)
+
+  @@index([lotId])
+  @@index([eventId])
+  @@map("trace_event_line")
+}
+
+/// Genealogy: parent lot → child lot through an event (materialised for fast traces).
+model LotEdge {
+  id          String @id @db.Uuid
+  orgId       String @map("org_id") @db.Uuid
+  parentLotId String @map("parent_lot_id") @db.Uuid
+  childLotId  String @map("child_lot_id") @db.Uuid
+  eventId     String @map("event_id") @db.Uuid
+
+  @@unique([parentLotId, childLotId, eventId])
+  @@index([parentLotId])
+  @@index([childLotId])
+  @@map("lot_edge")
+}

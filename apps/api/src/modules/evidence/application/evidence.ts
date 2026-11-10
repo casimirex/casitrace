@@ -93,10 +93,11 @@ const checkTargets = async (
         found = (await tx.productVersion.count({ where: { id: l.targetId } })) > 0;
         break;
       case "lot":
+        found = (await tx.lot.count({ where: { id: l.targetId } })) > 0;
+        break;
       case "event":
-        throw new AppError("VALIDATION_FAILED", "Lots and events arrive in a later release.", [
-          { path, message: "not available yet" },
-        ]);
+        found = (await tx.traceEvent.count({ where: { id: l.targetId } })) > 0;
+        break;
     }
     if (!found)
       throw new AppError("VALIDATION_FAILED", `Linked ${l.targetType} not found.`, [
@@ -108,7 +109,7 @@ const checkTargets = async (
 const linkLabels = async (tx: Tx, links: { targetType: string; targetId: string }[]) => {
   const ids = (t: string) => links.filter((l) => l.targetType === t).map((l) => l.targetId);
   const labels = new Map<string, string>();
-  const [orgs, locations, partners, products, versions] = await Promise.all([
+  const [orgs, locations, partners, products, versions, lots, events] = await Promise.all([
     tx.organization.findMany({
       where: { id: { in: ids("organisation") } },
       select: { id: true, name: true },
@@ -123,7 +124,14 @@ const linkLabels = async (tx: Tx, links: { targetType: string; targetId: string 
       where: { id: { in: ids("product_version") } },
       select: { id: true, name: true, version: true },
     }),
+    tx.lot.findMany({ where: { id: { in: ids("lot") } }, select: { id: true, lotCode: true } }),
+    tx.traceEvent.findMany({
+      where: { id: { in: ids("event") } },
+      select: { id: true, type: true, occurredAt: true },
+    }),
   ]);
+  for (const l of lots) labels.set(l.id, `Lot ${l.lotCode}`);
+  for (const e of events) labels.set(e.id, `${e.type} ${e.occurredAt.toISOString().slice(0, 10)}`);
   for (const o of orgs) labels.set(o.id, o.name);
   for (const l of locations) labels.set(l.id, `${l.code} · ${l.name}`);
   for (const p of partners) labels.set(p.id, p.name);

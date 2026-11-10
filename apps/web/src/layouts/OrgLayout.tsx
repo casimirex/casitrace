@@ -4,6 +4,8 @@ import { useOrg } from "../features/orgs/queries";
 
 const tabs = [
   { to: "", label: "Overview", end: true },
+  { to: "lots", label: "Lots" },
+  { to: "record/harvest", label: "Record" },
   { to: "profile", label: "Profile" },
   { to: "locations", label: "Locations" },
   { to: "partners", label: "Partners" },

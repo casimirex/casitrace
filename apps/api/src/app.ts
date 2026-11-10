@@ -13,6 +13,7 @@ import { evidenceRoutes } from "./modules/evidence/presentation/routes";
 import { AUTH_BASE_PATH } from "./modules/identity/auth";
 import { partiesRoutes } from "./modules/parties/presentation/routes";
 import { systemRoutes } from "./modules/system/routes";
+import { traceabilityRoutes } from "./modules/traceability/presentation/routes";
 
 export const API_INFO: {
   openapi: "3.1.0";
@@ -57,6 +58,7 @@ export const createApp = (deps: Deps) => {
   v1.route("/", partiesRoutes(deps));
   v1.route("/", catalogRoutes(deps));
   v1.route("/", evidenceRoutes(deps));
+  v1.route("/", traceabilityRoutes(deps));
 
   const api = newRouter();
   api.route("/", systemRoutes(deps));

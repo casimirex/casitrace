@@ -32,6 +32,8 @@ const PARAM_VALUES: Record<string, (orgId: string) => string> = {
   evidenceId: () => newId(),
   linkId: () => newId(),
   notificationId: () => newId(),
+  lotId: () => newId(),
+  eventId: () => newId(),
 };
 /** Operations whose only path parameters are these can be called successfully by a member. */
 const LISTING_PARAMS = new Set(["orgId", "kind"]);

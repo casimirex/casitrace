@@ -18,6 +18,9 @@ import { InvitationPage } from "../features/orgs/InvitationPage";
 import { OrgPage } from "../features/orgs/OrgPage";
 import { VerificationsPage } from "../features/platform/VerificationsPage";
 import { StatusPage } from "../features/system/StatusPage";
+import { CapturePage } from "../features/trace/CapturePage";
+import { LotDetailPage } from "../features/trace/LotDetailPage";
+import { LotsPage } from "../features/trace/LotsPage";
 import { AppLayout } from "../layouts/AppLayout";
 import { AuthLayout } from "../layouts/AuthLayout";
 import { OrgLayout } from "../layouts/OrgLayout";
@@ -52,6 +55,10 @@ export const router = createBrowserRouter([
           { path: "partners", element: <PartnersPage /> },
           { path: "products", element: <ProductsPage /> },
           { path: "products/:productId", element: <ProductDetailPage /> },
+          { path: "lots", element: <LotsPage /> },
+          { path: "lots/:lotId", element: <LotDetailPage /> },
+          { path: "record", element: <CapturePage /> },
+          { path: "record/:kind", element: <CapturePage /> },
           { path: "evidence", element: <EvidencePage /> },
           { path: "evidence/:evidenceId", element: <EvidenceDetailPage /> },
           { path: "import", element: <ImportPage /> },

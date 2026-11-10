@@ -233,7 +233,7 @@ export function LinkedEvidence({
   targetId,
 }: {
   orgId: string;
-  targetType: "product" | "location";
+  targetType: "product" | "location" | "lot";
   targetId: string;
 }) {
   const list = useQuery({
