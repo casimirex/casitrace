@@ -43,6 +43,8 @@ const PARAM_VALUES: Record<string, (orgId: string) => string> = {
   publicId: () => "nonexistent00",
   gtin: () => "00000000000000",
   lotCode: () => "NONE",
+  recallId: () => newId(),
+  noticeId: () => newId(),
 };
 /** Operations whose only path parameters are these can be called successfully by a member. */
 const LISTING_PARAMS = new Set(["orgId", "kind"]);

@@ -20,6 +20,8 @@ const EnvSchema = z.object({
   CLAMAV_PORT: z.coerce.number().int().positive().default(3310),
   /** Cron (UTC) for the certificate expiry check. */
   EXPIRY_CRON: z.string().default("0 5 * * *"),
+  /** Domain-event jobs processed in parallel by this worker process. */
+  WORKER_CONCURRENCY: z.coerce.number().int().min(1).max(32).default(4),
   OUTBOX_BATCH_SIZE: z.coerce.number().int().min(1).max(1000).default(100),
 });
 export type WorkerEnv = z.infer<typeof EnvSchema>;

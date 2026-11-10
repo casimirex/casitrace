@@ -1,6 +1,6 @@
 import type { components } from "@casitrace/api-client";
 import { CERTIFICATE_SCHEMES, EVIDENCE_STATUSES, EVIDENCE_TYPES } from "@casitrace/contracts";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { type FormEvent, useState } from "react";
 import { Link, useNavigate } from "react-router";
 import { Alert, Button, Card, Field, SelectField } from "../../components/ui";
@@ -13,6 +13,7 @@ export const typeLabel = (t: string) => (t[0]?.toUpperCase() ?? "") + t.slice(1)
 
 function UploadForm({ orgId }: { orgId: string }) {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [type, setType] = useState<string>("certificate");
   const [errors, setErrors] = useState<Record<string, string>>({});
   const products = useQuery({
@@ -27,7 +28,11 @@ function UploadForm({ orgId }: { orgId: string }) {
   });
   const upload = useMutation({
     mutationFn: (form: FormData) => postForm<Evidence>(`/v1/orgs/${orgId}/evidence`, form),
-    onSuccess: (e) => navigate(e.id),
+    onSuccess: async (e) => {
+      // Lists of linked evidence (product, lot and location pages) must show the new upload.
+      await queryClient.invalidateQueries({ queryKey: ["org", orgId, "evidence"] });
+      navigate(e.id);
+    },
     onError: (e) => setErrors(fieldErrors(e)),
   });
 

@@ -84,7 +84,7 @@ test("harvest + receipt → milling → shipment, traced both ways, reported, co
   expect(file.suggestedFilename()).toBe("trace-OIL-001.csv");
 
   // Correct the shipment: void it with a reason; stock returns and the event stays, struck through.
-  await page.getByLabel("Reason").fill("Order cancelled before loading");
+  await page.getByLabel("Reason", { exact: true }).fill("Order cancelled before loading");
   const shipEvent = page
     .getByRole("list", { name: "Events" })
     .getByRole("listitem")

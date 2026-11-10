@@ -44,6 +44,7 @@ interface LockedLot {
   quantity: string;
   uom_code: string;
   product_version_id: string;
+  recall_case_id: string | null;
 }
 
 const conversionsFor = async (tx: Tx, versionIds: string[]) => {
@@ -157,7 +158,7 @@ export const recordEventTx = async (
     input.type === "ADJUST" && input.adjust ? [input.adjust.lotId] : input.inputs.map((i) => i.lotId);
   const locked = inputIds.length
     ? await tx.$queryRaw<LockedLot[]>`
-        SELECT id, lot_code, status, quantity::text AS quantity, uom_code, product_version_id
+        SELECT id, lot_code, status, quantity::text AS quantity, uom_code, product_version_id, recall_case_id
         FROM lot WHERE id = ANY(${inputIds}::uuid[]) ORDER BY id FOR UPDATE`
     : [];
   const lots = new Map(locked.map((l) => [l.id, l]));
@@ -167,6 +168,10 @@ export const recordEventTx = async (
     const lot = lots.get(line.lotId);
     if (!lot) fail("Input lot not found.", [{ path, message: "not found" }]);
     if (!lot) continue;
+    if (lot.recall_case_id)
+      fail(`Lot ${lot.lot_code} is under recall and cannot be used or shipped.`, [
+        { path, message: "recalled" },
+      ]);
     if (lot.status !== "active")
       fail(`Lot ${lot.lot_code} is ${lot.status.replace("_", " ")} and cannot be used.`, [
         { path, message: lot.status },

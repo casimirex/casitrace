@@ -33,14 +33,14 @@ const row = async (db: Db, publicId: string, version?: number) => {
 const liveFacts = (db: Db, r: PublicRow, snapshot: PassportSnapshot) =>
   withTenant(db, r.org_id, async (tx) => {
     const lot = r.lot_id
-      ? await tx.lot.findUnique({ where: { id: r.lot_id }, select: { status: true } })
+      ? await tx.lot.findUnique({ where: { id: r.lot_id }, select: { status: true, recallCaseId: true } })
       : null;
     const ids = snapshot.certificates.map((c) => c.evidenceId);
     const ev = ids.length
       ? await tx.evidence.findMany({ where: { id: { in: ids } }, select: { id: true, status: true } })
       : [];
     return {
-      recall: lot?.status === "recalled",
+      recall: lot?.status === "recalled" || !!lot?.recallCaseId,
       certificates: snapshot.certificates.map((c) => ({
         evidenceId: c.evidenceId,
         status: ev.find((e) => e.id === c.evidenceId)?.status ?? "removed",

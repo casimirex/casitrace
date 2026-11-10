@@ -214,6 +214,8 @@ export const LotDto = z
     initialQuantity: z.string(),
     status: z.enum(LOT_STATUSES),
     holdReason: z.string().nullable(),
+    /** Set while the lot is under a real recall (it cannot be used or shipped). */
+    recallCaseId: z.uuid().nullable(),
     location: z.object({ id: z.uuid(), code: z.string(), name: z.string() }).nullable(),
     createdByEventId: z.uuid(),
     createdAt: z.iso.datetime(),

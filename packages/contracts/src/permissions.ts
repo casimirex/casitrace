@@ -20,6 +20,7 @@ export const statements = {
   share: ["manage"],
   handoff: ["accept"],
   passport: ["publish"],
+  recall: ["start", "drill", "acknowledge"],
 } as const;
 
 export const ac = createAccessControl(statements);
@@ -43,6 +44,7 @@ export const roles = {
     share: ["manage"],
     handoff: ["accept"],
     passport: ["publish"],
+    recall: ["start", "drill", "acknowledge"],
   }),
   admin: ac.newRole({
     organization: ["update"],
@@ -59,6 +61,7 @@ export const roles = {
     share: ["manage"],
     handoff: ["accept"],
     passport: ["publish"],
+    recall: ["start", "drill", "acknowledge"],
   }),
   // Operators maintain master data and capture events; they cannot archive or manage people.
   operator: ac.newRole({
@@ -70,11 +73,14 @@ export const roles = {
     // Operators record and correct events but cannot override mass balance.
     event: ["record", "void"],
     handoff: ["accept"],
+    recall: ["acknowledge"],
   }),
   // Reviewers (quality staff) handle evidence and decide whether it is verified.
+  // Quality staff run drills and acknowledge notices; starting a real recall needs an owner or admin.
   reviewer: ac.newRole({
     evidence: ["create", "update", "verify"],
     lot: ["hold"],
+    recall: ["drill", "acknowledge"],
   }),
   viewer: ac.newRole({}),
 } satisfies Record<RoleName, unknown>;

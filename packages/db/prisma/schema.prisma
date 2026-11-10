@@ -547,6 +547,8 @@ model Lot {
   /// active | consumed | shipped | on_hold | recalled | voided
   status           String   @default("active")
   holdReason       String?  @map("hold_reason")
+  /// Set while the lot is part of a real (not drill) recall; blocks use and shows the public banner.
+  recallCaseId     String?  @map("recall_case_id") @db.Uuid
   locationId       String?  @map("location_id") @db.Uuid
   createdByEventId String   @map("created_by_event_id") @db.Uuid
   createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
@@ -824,4 +826,78 @@ model PassportVersion {
   @@unique([passportId, version])
   @@index([gtin, lotCode])
   @@map("passport_version")
+}
+
+// ─── recalls (P8) ───────────────────────────────────────────────────────────
+
+/// A recall (or a timed mock-recall drill) started from one or more lots.
+model RecallCase {
+  id           String    @id @db.Uuid
+  orgId        String    @map("org_id") @db.Uuid
+  code         String
+  /// real | drill
+  mode         String
+  /// open | closed
+  status       String    @default("open")
+  reason       String
+  /// health_risk | quality | regulatory | other
+  severity     String
+  /// Instructions shown to customers and on public pages.
+  instructions String?
+  impact       Json?
+  startedAt    DateTime  @default(now()) @map("started_at") @db.Timestamptz(3)
+  startedById  String?   @map("started_by_id") @db.Uuid
+  impactAt     DateTime? @map("impact_at") @db.Timestamptz(3)
+  /// First export of the impact set (the drill clock stops here).
+  exportedAt   DateTime? @map("exported_at") @db.Timestamptz(3)
+  closedAt     DateTime? @map("closed_at") @db.Timestamptz(3)
+  closedById   String?   @map("closed_by_id") @db.Uuid
+  closeNote    String?   @map("close_note")
+
+  lots    RecallLot[]
+  notices RecallNotice[]
+
+  @@unique([orgId, code])
+  @@index([orgId, status])
+  @@map("recall_case")
+}
+
+/// A lot in a recall: a starting lot or one found downstream in this organisation.
+model RecallLot {
+  id     String @id @db.Uuid
+  orgId  String @map("org_id") @db.Uuid
+  caseId String @map("case_id") @db.Uuid
+  lotId  String @map("lot_id") @db.Uuid
+  /// root | downstream
+  role   String
+  depth  Int
+
+  recallCase RecallCase @relation(fields: [caseId], references: [id], onDelete: Restrict)
+
+  @@unique([caseId, lotId])
+  @@map("recall_lot")
+}
+
+/// A customer that received affected product: notified on Casitrace, or listed for contact.
+model RecallNotice {
+  id               String    @id @db.Uuid
+  orgId            String    @map("org_id") @db.Uuid
+  caseId           String    @map("case_id") @db.Uuid
+  partnerId        String    @map("partner_id") @db.Uuid
+  /// Set when the customer is on Casitrace: the notice is visible to it.
+  recipientOrgId   String?   @map("recipient_org_id") @db.Uuid
+  /// platform | external
+  channel          String
+  /// Shipped lots and quantities (the recalling organisation's records).
+  shipments        Json
+  notifiedAt       DateTime? @map("notified_at") @db.Timestamptz(3)
+  acknowledgedAt   DateTime? @map("acknowledged_at") @db.Timestamptz(3)
+  acknowledgedById String?   @map("acknowledged_by_id") @db.Uuid
+  ackNote          String?   @map("ack_note")
+
+  recallCase RecallCase @relation(fields: [caseId], references: [id], onDelete: Restrict)
+
+  @@unique([caseId, partnerId])
+  @@index([recipientOrgId])
+  @@map("recall_notice")
 }

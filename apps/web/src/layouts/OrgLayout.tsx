@@ -9,6 +9,7 @@ const tabs = [
   { to: "shipments", label: "Shipments" },
   { to: "sharing", label: "Sharing" },
   { to: "passports", label: "Public pages" },
+  { to: "recalls", label: "Recalls" },
   { to: "profile", label: "Profile" },
   { to: "locations", label: "Locations" },
   { to: "partners", label: "Partners" },

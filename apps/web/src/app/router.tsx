@@ -23,6 +23,7 @@ import { InvitationPage } from "../features/orgs/InvitationPage";
 import { OrgPage } from "../features/orgs/OrgPage";
 import { PassportDetailPage, PassportsPage } from "../features/passports/PassportsPage";
 import { VerificationsPage } from "../features/platform/VerificationsPage";
+import { RecallCasePage, RecallsPage } from "../features/recalls/RecallsPage";
 import { StatusPage } from "../features/system/StatusPage";
 import { CapturePage } from "../features/trace/CapturePage";
 import { LotDetailPage } from "../features/trace/LotDetailPage";
@@ -64,6 +65,8 @@ export const router = createBrowserRouter([
           { path: "lots", element: <LotsPage /> },
           { path: "shipments", element: <ShipmentsPage /> },
           { path: "passports", element: <PassportsPage /> },
+          { path: "recalls", element: <RecallsPage /> },
+          { path: "recalls/:recallId", element: <RecallCasePage /> },
           { path: "passports/:passportId", element: <PassportDetailPage /> },
           { path: "sharing", element: <SharingPage /> },
           { path: "shared/evidence/:evidenceId", element: <SharedEvidencePage /> },

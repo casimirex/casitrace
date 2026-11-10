@@ -144,6 +144,7 @@ const lotDtos = async (tx: Tx, ids: string[]): Promise<LotOut[]> => {
       initialQuantity: q(lot.initialQuantity),
       status: lot.status as LotOut["status"],
       holdReason: lot.holdReason,
+      recallCaseId: lot.recallCaseId,
       location: lot.locationId ? (locs.get(lot.locationId) ?? null) : null,
       createdByEventId: lot.createdByEventId,
       createdAt: lot.createdAt.toISOString(),

@@ -105,6 +105,18 @@ Casitrace is a food traceability and evidence platform. The plan is `roadmap-v2.
 - Signing key: `PASSPORT_SIGNING_KEY` (dev key in `.env.example`, refused in production); rotation adds the old public key to `PASSPORT_PREVIOUS_KEYS`. `scripts/verify-passport.mjs` verifies with Node built-ins only and must keep working.
 - Public endpoints are rate limited in memory per IP (`platform/rate-limit.ts`).
 
+## Recalls (P8)
+
+- Module `apps/api/src/modules/recalls`. A recall's impact = forward `traceAcross` from the starting lots (redacted where not shared) + this organisation's own shipments of affected lots (one notice per customer).
+- **Real** recalls set `lot.recall_case_id` on the organisation's own affected lots: `recordEventTx` refuses them as inputs, and public pages show the recall banner. Do not use `lot.status` for recalls (it is recomputed from events). Closing a case keeps the flag.
+- **Drills** compute the same impact and notices but flag nothing and notify only the organisation's own team; customers are listed as "would be contacted". The drill clock = start → first CSV export (`secondsToExport`).
+- Notices are two-party rows (`recall_notice`: sender `org_id`, `recipient_org_id` for customers on Casitrace). Customers see the lots in their own records that came from the recalled shipments via `cross_lot_link`.
+- Real recalls need `recall:start` (owner/admin); drills `recall:drill` (also reviewers).
+
+## Worker throughput
+
+- The domain-event consumer runs `WORKER_CONCURRENCY` jobs in parallel (default 4); the worker's DB pool is sized `WORKER_CONCURRENCY + 4`. A pool smaller than the concurrency made email jobs wait up to 30 s for a connection (found in P8). Keep handlers idempotent.
+
 ## Auth (ADR 0009)
 
 - Better Auth handles sign-up, verification, sessions, password reset, organisations, invitations and TOTP at `/api/v1/auth`. Do not re-implement these.

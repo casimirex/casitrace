@@ -6,6 +6,7 @@ import { api, unwrap } from "../../lib/api";
 import { LinkedEvidence } from "../evidence/EvidenceDetailPage";
 import { useCan, useOrgContext } from "../masterdata/common";
 import { CreatePassportButton } from "../passports/PassportsPage";
+import { StartRecallForm } from "../recalls/RecallsPage";
 import { LotStatus } from "./LotsPage";
 import { TraceGraph } from "./TraceGraph";
 
@@ -80,6 +81,14 @@ export function LotDetailPage() {
   const t = trace.data;
   return (
     <div className="grid gap-6">
+      {l.recallCaseId && (
+        <Alert>
+          This lot is under recall. It cannot be used or shipped.{" "}
+          <Link to={`/orgs/${org.id}/recalls/${l.recallCaseId}`} className="underline">
+            Open the recall
+          </Link>
+        </Alert>
+      )}
       <Card title={`Lot ${l.lotCode}`} actions={<LotStatus status={l.status} />}>
         <dl className="grid grid-cols-[max-content_1fr] gap-x-6 gap-y-1.5 text-sm sm:grid-cols-[max-content_1fr_max-content_1fr]">
           <dt className="text-muted">Product</dt>
@@ -281,7 +290,14 @@ export function LotDetailPage() {
             ))}
           </ol>
         </Card>
-        <LinkedEvidence orgId={org.id} targetType="lot" targetId={l.id} />
+        <div className="grid content-start gap-6">
+          <LinkedEvidence orgId={org.id} targetType="lot" targetId={l.id} />
+          {l.status !== "voided" && (
+            <Card title="Recall">
+              <StartRecallForm lotId={l.id} />
+            </Card>
+          )}
+        </div>
       </div>
     </div>
   );

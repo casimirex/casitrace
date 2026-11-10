@@ -12,7 +12,8 @@ import { relayOutboxBatch } from "./outbox-relay";
 
 const env = loadWorkerEnv();
 const logger = pino({ level: env.LOG_LEVEL, base: { service: "casitrace-worker" } });
-const db = createDb({ url: env.DATABASE_URL, max: 5 });
+// One connection per concurrent job, plus the outbox relay and scheduled jobs.
+const db = createDb({ url: env.DATABASE_URL, max: env.WORKER_CONCURRENCY + 4 });
 const boss = createBoss(env.DATABASE_URL);
 boss.on("error", (err) => logger.error({ err }, "pg-boss error"));
 
@@ -40,7 +41,7 @@ const registry = new EventRegistry().on("evidence.file_uploaded", createScanHand
 
 await boss.start();
 await ensureQueues(boss);
-await startConsumers(boss, registry);
+await startConsumers(boss, registry, 1, env.WORKER_CONCURRENCY);
 
 // Daily certificate expiry check (warnings at 30/7/0 days; expire after the end date).
 const EXPIRY_QUEUE = "evidence-expiry-check";

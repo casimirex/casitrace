@@ -20,7 +20,16 @@ export const bossSink = (boss: PgBoss): EventSink => ({
   },
 });
 
-export const startConsumers = (boss: PgBoss, registry: EventRegistry, pollingIntervalSeconds = 2) =>
-  boss.work<RelayedEvent>(DOMAIN_EVENTS_QUEUE, { pollingIntervalSeconds }, async (jobs) => {
+/**
+ * Consumes domain events. Several local workers run in parallel so one slow job (a virus scan, a
+ * burst of recall emails) does not hold up the rest; handlers are idempotent, so this is safe.
+ */
+export const startConsumers = (
+  boss: PgBoss,
+  registry: EventRegistry,
+  pollingIntervalSeconds = 2,
+  localConcurrency = 4,
+) =>
+  boss.work<RelayedEvent>(DOMAIN_EVENTS_QUEUE, { pollingIntervalSeconds, localConcurrency }, async (jobs) => {
     for (const job of jobs) await registry.dispatch(job.data);
   });
