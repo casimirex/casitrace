@@ -209,6 +209,8 @@ export const PassportDto = z
         keyId: z.string(),
       }),
     ),
+    /** Anonymous page views in the last 30 days (lower bound: CDN-cached views are not counted). */
+    views30d: z.object({ qr: z.number().int(), page: z.number().int() }),
     updatedAt: z.iso.datetime(),
   })
   .openapi("Passport");

@@ -393,12 +393,40 @@ describe("QR and resolver", () => {
     expect(await qr.text()).toStartWith("<svg");
     const res = await anon().call("GET", "/api/v1/r/01/08001234560041/10/B750-PUB-1");
     expect(res.status).toBe(302);
-    expect(res.headers.get("location")).toBe(`/p/${publicId}`);
+    expect(res.headers.get("location")).toBe(`/p/${publicId}?src=qr`);
     // Unknown lot of a known product falls back to the newest page for the GTIN.
     expect((await anon().call("GET", "/api/v1/r/01/08001234560041/10/UNKNOWN")).headers.get("location")).toBe(
-      `/p/${publicId}`,
+      `/p/${publicId}?src=qr`,
     );
     expect((await anon().call("GET", "/api/v1/r/01/00000000000000")).status).toBe(404);
+  });
+
+  test("page views are counted per day without personal data; QR scans separately", async () => {
+    const before = await json<{ views30d: { qr: number; page: number } }>(
+      await owner.call("GET", `${base}/passports/${passportId}`),
+    );
+    await anon().call("GET", `/api/v1/public/p/${publicId}?src=qr`);
+    await anon().call("GET", `/api/v1/public/p/${publicId}?src=qr`);
+    await anon().call("GET", `/api/v1/public/p/${publicId}`);
+    await Bun.sleep(100); // counting does not block the page
+    const after = await json<{ views30d: { qr: number; page: number } }>(
+      await owner.call("GET", `${base}/passports/${passportId}`),
+    );
+    expect(after.views30d.qr - before.views30d.qr).toBe(2);
+    expect(after.views30d.page - before.views30d.page).toBe(1);
+    const cols = await db.$queryRaw<{ column_name: string }[]>`
+      SELECT column_name FROM information_schema.columns WHERE table_name = 'passport_view_daily'`;
+    expect(cols.map((c) => c.column_name).sort()).toEqual([
+      "day",
+      "org_id",
+      "passport_id",
+      "source",
+      "views",
+    ]);
+    // The app role cannot write counts directly (only through the counting function).
+    await expect(Promise.resolve(db.$executeRaw`UPDATE passport_view_daily SET views = 0`)).rejects.toThrow(
+      /permission denied/,
+    );
   });
 });
 

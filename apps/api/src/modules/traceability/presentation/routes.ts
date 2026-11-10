@@ -30,6 +30,19 @@ const valid = <T>(c: C, target: "param" | "json" | "query") =>
   (c.req as unknown as { valid(t: string): T }).valid(target);
 const eventCtx = (c: C): Ctx => ({ ...orgCommand(c), role: c.get("membership").role });
 
+const CaptureHeaders = z.object({
+  ms: z.coerce.number().int().min(0).max(86_400_000),
+  device: z.enum(["touch", "desktop"]),
+});
+/** Optional x-capture-ms / x-capture-device headers from the capture forms; ignored when malformed. */
+const captureTiming = (c: { req: { header(name: string): string | undefined } }) => {
+  const parsed = CaptureHeaders.safeParse({
+    ms: c.req.header("x-capture-ms"),
+    device: c.req.header("x-capture-device"),
+  });
+  return parsed.success ? parsed.data : undefined;
+};
+
 export const traceabilityRoutes = (deps: Deps) => {
   const { db } = deps;
   const r = (access: Parameters<typeof withAccess>[1], route: Parameters<typeof createRoute>[0]) =>
@@ -192,7 +205,12 @@ export const traceabilityRoutes = (deps: Deps) => {
   return new OpenAPIHono<AppEnv>()
     .openapi(recordR, async (c) => {
       const ctx = eventCtx(c);
-      const { eventId, replayed } = await recordEvent(db, ctx, valid<RecordEvent>(c, "json"));
+      const { eventId, replayed } = await recordEvent(
+        db,
+        ctx,
+        valid<RecordEvent>(c, "json"),
+        captureTiming(c),
+      );
       return c.json(await getEvent(db, ctx.orgId, eventId), replayed ? 200 : 201);
     })
     .openapi(listEventsR, async (c) => {

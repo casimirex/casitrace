@@ -6,11 +6,22 @@ const EnvSchema = z.object({
   LOG_LEVEL: z.enum(["fatal", "error", "warn", "info", "debug", "trace", "silent"]).default("info"),
   API_PORT: z.coerce.number().int().positive().default(3000),
   DATABASE_URL: z.url(),
+  /** Connections per API process (Postgres max_connections must cover all processes). */
+  DB_POOL_MAX: z.coerce.number().int().min(2).max(200).default(20),
   WEB_ORIGIN: z.url(),
   AUTH_SECRET: z.string().min(32, "AUTH_SECRET must be at least 32 characters"),
   /** "off" only for local browser tests that create many accounts from one IP. Never off in production. */
   AUTH_RATE_LIMIT: z.enum(["on", "off"]).default("on"),
-  PASSPORT_SIGNING_KEY: z.string().min(40),
+  /** "local": key in PASSPORT_SIGNING_KEY (development, tests). "kms": OpenBao/Vault Transit (required in production, ADR 0015). */
+  PASSPORT_SIGNER: z.enum(["local", "kms"]).default("local"),
+  PASSPORT_SIGNING_KEY: z.string().min(40).optional(),
+  KMS_ADDR: z.url().optional(),
+  KMS_TRANSIT_MOUNT: z.string().min(1).default("transit"),
+  KMS_KEY_NAME: z.string().min(1).default("passport-signing"),
+  /** Development only; production uses AppRole (KMS_ROLE_ID + KMS_SECRET_ID). */
+  KMS_TOKEN: z.string().min(1).optional(),
+  KMS_ROLE_ID: z.string().min(1).optional(),
+  KMS_SECRET_ID: z.string().min(1).optional(),
   PASSPORT_PREVIOUS_KEYS: z
     .string()
     .default("[]")
@@ -23,6 +34,10 @@ const EnvSchema = z.object({
       }
     }),
   PUBLIC_ORIGIN: z.url().optional(),
+  /** OTLP/HTTP traces endpoint (e.g. http://otel:4318/v1/traces). Unset = tracing off. */
+  OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: z.url().optional(),
+  /** Bearer token for GET /api/metrics (Prometheus). Unset = endpoint disabled. */
+  METRICS_TOKEN: z.string().min(24).optional(),
   S3_ENDPOINT: z.url(),
   S3_REGION: z.string().min(1),
   S3_BUCKET: z.string().min(3),
@@ -43,6 +58,30 @@ export const loadEnv = (source: Record<string, string | undefined> = process.env
     .refine((e) => !(e.NODE_ENV === "production" && e.PASSPORT_SIGNING_KEY === DEV_SIGNING_KEY), {
       message: "The development signing key cannot be used in production",
       path: ["PASSPORT_SIGNING_KEY"],
+    })
+    .refine((e) => !(e.NODE_ENV === "production" && e.PASSPORT_SIGNER !== "kms"), {
+      message: "Production signs passports with the KMS (PASSPORT_SIGNER=kms)",
+      path: ["PASSPORT_SIGNER"],
+    })
+    .refine((e) => e.PASSPORT_SIGNER !== "local" || e.PASSPORT_SIGNING_KEY, {
+      message: "Required when PASSPORT_SIGNER=local",
+      path: ["PASSPORT_SIGNING_KEY"],
+    })
+    .refine((e) => e.PASSPORT_SIGNER !== "kms" || e.KMS_ADDR, {
+      message: "Required when PASSPORT_SIGNER=kms",
+      path: ["KMS_ADDR"],
+    })
+    .refine((e) => e.PASSPORT_SIGNER !== "kms" || e.KMS_TOKEN || (e.KMS_ROLE_ID && e.KMS_SECRET_ID), {
+      message: "Set KMS_ROLE_ID and KMS_SECRET_ID (or KMS_TOKEN in development)",
+      path: ["KMS_ROLE_ID"],
+    })
+    .refine((e) => !(e.NODE_ENV === "production" && !e.METRICS_TOKEN), {
+      message: "Production needs METRICS_TOKEN (monitoring scrapes /api/metrics)",
+      path: ["METRICS_TOKEN"],
+    })
+    .refine((e) => !(e.NODE_ENV === "production" && e.KMS_TOKEN), {
+      message: "Production authenticates to the KMS with AppRole, not a static token",
+      path: ["KMS_TOKEN"],
     })
     .safeParse(source);
   if (!parsed.success) {

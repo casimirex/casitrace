@@ -794,7 +794,8 @@ model Passport {
   createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt      DateTime @updatedAt @map("updated_at") @db.Timestamptz(3)
 
-  versions PassportVersion[]
+  versions   PassportVersion[]
+  viewCounts PassportViewDaily[]
 
   @@index([orgId, status])
   @@index([lotId])
@@ -900,4 +901,42 @@ model RecallNotice {
   @@unique([caseId, partnerId])
   @@index([recipientOrgId])
   @@map("recall_notice")
+}
+
+/// Shared fixed-window counters for public rate limits (P9), so several API instances share one limit.
+/// Keys are hashed (no raw IP addresses are stored). UNLOGGED: losing counters on a crash is acceptable.
+model RateLimitBucket {
+  key     String   @id
+  count   Int
+  resetAt DateTime @map("reset_at") @db.Timestamptz(3)
+
+  @@index([resetAt])
+  @@map("rate_limit_bucket")
+}
+
+/// Daily public view counts per passport (pilot KPI "QR scans / passport views"). Counts only:
+/// no IP address, user agent or other personal data. Written by casitrace_count_passport_view().
+model PassportViewDaily {
+  orgId      String   @map("org_id") @db.Uuid
+  passportId String   @map("passport_id") @db.Uuid
+  day        DateTime @db.Date
+  /// qr = arrived via the GS1 Digital Link in the QR code; page = direct link / directory
+  source     String
+  views      Int
+
+  passport Passport @relation(fields: [passportId], references: [id], onDelete: Cascade)
+
+  @@id([passportId, day, source])
+  @@index([orgId, day])
+  @@map("passport_view_daily")
+}
+
+/// Successful base backups, recorded by the backup service (owner role) so monitoring can alert
+/// when none has succeeded recently. Operations data, no tenant data.
+model BackupRun {
+  id         BigInt   @id @default(autoincrement())
+  name       String
+  finishedAt DateTime @default(now()) @map("finished_at") @db.Timestamptz(3)
+
+  @@map("ops_backup_run")
 }

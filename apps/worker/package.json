@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@casitrace/db": "workspace:*",
+    "@casitrace/observability": "workspace:*",
     "@casitrace/shared": "workspace:*",
     "nodemailer": "10.2.1",
     "pg-boss": "12.38.0",

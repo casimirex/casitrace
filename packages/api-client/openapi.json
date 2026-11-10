@@ -4027,6 +4027,21 @@
               ]
             }
           },
+          "views30d": {
+            "type": "object",
+            "properties": {
+              "qr": {
+                "type": "integer"
+              },
+              "page": {
+                "type": "integer"
+              }
+            },
+            "required": [
+              "qr",
+              "page"
+            ]
+          },
           "updatedAt": {
             "type": "string",
             "format": "date-time"
@@ -4044,6 +4059,7 @@
           "publicUrl",
           "qrPayload",
           "versions",
+          "views30d",
           "updatedAt"
         ]
       },
@@ -14207,6 +14223,17 @@
             },
             "required": false,
             "name": "v",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "qr"
+              ]
+            },
+            "required": false,
+            "name": "src",
             "in": "query"
           }
         ],

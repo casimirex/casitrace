@@ -290,6 +290,13 @@ const dto = async (tx: Tx, cfg: PublicationConfig, id: string): Promise<Passport
   const lot = p.lotId ? await tx.lot.findUnique({ where: { id: p.lotId } }) : null;
   const latest = p.versions[0];
   const urls = publicUrls(cfg.publicOrigin, p.publicId, latest?.gtin ?? pv.gtin, lot?.lotCode ?? null);
+  const since = new Date(Date.now() - 30 * 86_400_000);
+  const views = await tx.passportViewDaily.groupBy({
+    by: ["source"],
+    where: { passportId: id, day: { gte: since } },
+    _sum: { views: true },
+  });
+  const viewCount = (s: string) => views.find((v) => v.source === s)?._sum.views ?? 0;
   return {
     id: p.id,
     publicId: p.publicId,
@@ -307,6 +314,7 @@ const dto = async (tx: Tx, cfg: PublicationConfig, id: string): Promise<Passport
       digest: v.digest,
       keyId: v.keyId,
     })),
+    views30d: { qr: viewCount("qr"), page: viewCount("page") },
     updatedAt: p.updatedAt.toISOString(),
   };
 };
@@ -395,7 +403,7 @@ export const publishPassport = async (db: Db, cfg: PublicationConfig, ctx: Ctx, 
   const version = p.currentVersion + 1;
   const snapshot = await buildSnapshot(db, ctx.orgId, id, version, new Date());
   const canonical = canonicalize(snapshot as unknown as Json);
-  const signature = await cfg.signer.sign(canonical);
+  const { signature, kid } = await cfg.signer.sign(canonical);
   return runCommand(db, ctx, async (tx) => {
     const moved = await tx.passport.updateMany({
       where: { id, currentVersion: p.currentVersion },
@@ -412,7 +420,7 @@ export const publishPassport = async (db: Db, cfg: PublicationConfig, ctx: Ctx, 
         canonical,
         digest: sha256Hex(canonical),
         signature,
-        keyId: cfg.signer.kid,
+        keyId: kid,
         gtin: gtin14(snapshot.product.gtin),
         lotCode: snapshot.lot?.lotCode ?? null,
         publishedById: ctx.actor.id,
@@ -425,7 +433,7 @@ export const publishPassport = async (db: Db, cfg: PublicationConfig, ctx: Ctx, 
           action: "passport.published",
           resourceType: "passport",
           resourceId: id,
-          data: { version, digest: sha256Hex(canonical), keyId: cfg.signer.kid },
+          data: { version, digest: sha256Hex(canonical), keyId: kid },
         },
       ],
     };

@@ -10,23 +10,68 @@ interface PublicRow {
   current_version: number;
   org_id: string;
   version: number;
-  canonical: string;
   digest: string;
   signature: string;
   key_id: string;
   lot_id: string | null;
 }
 
-/** Reads only the public view: published (or withdrawn) versions of passports. */
+/** Reads only the public view: published (or withdrawn) versions of passports. No snapshot body. */
 const row = async (db: Db, publicId: string, version?: number) => {
   const rows = await db.$queryRaw<PublicRow[]>`
-    SELECT public_id, status, current_version, org_id, version, canonical, digest, signature, key_id, lot_id
+    SELECT public_id, status, current_version, org_id, version, digest, signature, key_id, lot_id
     FROM public_passport_version
     WHERE public_id = ${publicId} AND version = COALESCE(${version ?? null}::int, current_version)
     LIMIT 1`;
   const r = rows[0];
   if (!r) throw new AppError("NOT_FOUND", "No public page with this address.");
   return r;
+};
+
+interface Verified {
+  canonical: string;
+  snapshot: PassportSnapshot;
+  digestMatches: boolean;
+  valid: boolean;
+  at: number;
+}
+
+/**
+ * Published versions are immutable, so their parsed snapshot and signature check are computed once
+ * per signer and kept briefly in memory (P9 load test: parsing and verifying large snapshots on every
+ * view capped the page at 5 requests/s). Keyed by digest, so a different body can never hit the cache.
+ * The TTL bounds how long a key withdrawn from the signer's list would still count as valid.
+ */
+const VERIFIED_TTL_MS = 10 * 60_000;
+const VERIFIED_MAX = 500;
+const verifiedCache = new WeakMap<Signer, Map<string, Verified>>();
+
+const verified = async (db: Db, signer: Signer, r: PublicRow): Promise<Verified> => {
+  let cache = verifiedCache.get(signer);
+  if (!cache) {
+    cache = new Map();
+    verifiedCache.set(signer, cache);
+  }
+  const key = `${r.public_id}:${r.version}:${r.digest}:${r.key_id}`;
+  const hit = cache.get(key);
+  if (hit && Date.now() - hit.at < VERIFIED_TTL_MS) return hit;
+  const [body] = await db.$queryRaw<{ canonical: string }[]>`
+    SELECT canonical FROM public_passport_version WHERE public_id = ${r.public_id} AND version = ${r.version}`;
+  if (!body) throw new AppError("NOT_FOUND", "No public page with this address.");
+  const digestMatches = sha256Hex(body.canonical) === r.digest;
+  const v: Verified = {
+    canonical: body.canonical,
+    snapshot: SnapshotSchema.parse(JSON.parse(body.canonical)),
+    digestMatches,
+    valid: digestMatches && (await signer.verify(body.canonical, r.signature, r.key_id)),
+    at: Date.now(),
+  };
+  // Only valid content is cached; an invalid row is re-checked on every request.
+  if (v.valid) {
+    if (cache.size >= VERIFIED_MAX) cache.delete(cache.keys().next().value as string);
+    cache.set(key, v);
+  }
+  return v;
 };
 
 /** Live facts that can change after publication: recall and current certificate status. */
@@ -48,45 +93,46 @@ const liveFacts = (db: Db, r: PublicRow, snapshot: PassportSnapshot) =>
     };
   });
 
-export const getPublicPassport = async (db: Db, publicId: string, version?: number) => {
+/** One read of everything a public page needs: the signed version, its check and the live facts. */
+export const loadPublicPassport = async (db: Db, signer: Signer, publicId: string, version?: number) => {
   const r = await row(db, publicId, version);
-  const snapshot = SnapshotSchema.parse(JSON.parse(r.canonical));
-  const live = await liveFacts(db, r, snapshot);
+  const v = await verified(db, signer, r);
+  const live = await liveFacts(db, r, v.snapshot);
   return {
-    snapshot,
-    canonical: r.canonical,
-    digest: r.digest,
-    signature: { alg: "EdDSA" as const, kid: r.key_id, value: r.signature },
-    live: {
+    passport: {
+      snapshot: v.snapshot,
+      canonical: v.canonical,
+      digest: r.digest,
+      signature: { alg: "EdDSA" as const, kid: r.key_id, value: r.signature },
+      live: {
+        latestVersion: r.current_version,
+        isLatest: r.version === r.current_version,
+        status: r.status,
+        ...live,
+      },
+    },
+    check: {
+      publicId,
+      version: r.version,
+      valid: v.valid,
+      kid: r.key_id,
+      digest: r.digest,
+      digestMatches: v.digestMatches,
       latestVersion: r.current_version,
-      isLatest: r.version === r.current_version,
       status: r.status,
-      ...live,
+      recall: live.recall,
+      explanation: v.valid
+        ? "Casitrace published exactly this content and it has not changed since. The signature does not prove that the producer's claims are true; certificate statuses show what has been checked."
+        : "The signature does not match this content. Do not rely on it.",
     },
   };
 };
 
-export const verifyPublicPassport = async (db: Db, signer: Signer, publicId: string, version?: number) => {
-  const r = await row(db, publicId, version);
-  const digestMatches = sha256Hex(r.canonical) === r.digest;
-  const valid = digestMatches && (await signer.verify(r.canonical, r.signature, r.key_id));
-  const snapshot = SnapshotSchema.parse(JSON.parse(r.canonical));
-  const live = await liveFacts(db, r, snapshot);
-  return {
-    publicId,
-    version: r.version,
-    valid,
-    kid: r.key_id,
-    digest: r.digest,
-    digestMatches,
-    latestVersion: r.current_version,
-    status: r.status,
-    recall: live.recall,
-    explanation: valid
-      ? "Casitrace published exactly this content and it has not changed since. The signature does not prove that the producer's claims are true; certificate statuses show what has been checked."
-      : "The signature does not match this content. Do not rely on it.",
-  };
-};
+export const getPublicPassport = async (db: Db, signer: Signer, publicId: string, version?: number) =>
+  (await loadPublicPassport(db, signer, publicId, version)).passport;
+
+export const verifyPublicPassport = async (db: Db, signer: Signer, publicId: string, version?: number) =>
+  (await loadPublicPassport(db, signer, publicId, version)).check;
 
 /** GS1 Digital Link resolution (ADR 0005): /01/{gtin}[/10/{lot}] → the newest matching public page. */
 export const resolveDigitalLink = async (db: Db, gtin: string, lotCode?: string): Promise<string> => {
@@ -152,4 +198,9 @@ export const publicOrganisation = async (db: Db, orgId: string) => {
       return { publicId: p.public_id, productName: s.product.name, lotCode: s.lot?.lotCode ?? null };
     }),
   };
+};
+
+/** Adds one anonymous view to today's count (no personal data is stored; see casitrace_count_passport_view). */
+export const countPassportView = async (db: Db, publicId: string, source: "qr" | "page") => {
+  await db.$executeRaw`SELECT casitrace_count_passport_view(${publicId}, ${source})`;
 };

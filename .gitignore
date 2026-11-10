@@ -8,3 +8,8 @@ test-results/
 *.log
 .DS_Store
 packages/db/src/generated/
+infrastructure/production/.env
+infrastructure/production/.env.staging
+infrastructure/production/monitoring/alertmanager.yml
+infrastructure/production/monitoring/metrics-token
+infrastructure/production/.kms-bootstrap.staging.log

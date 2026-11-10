@@ -1,0 +1,53 @@
+{
+  "target": "http://api:3000",
+  "at": "2026-11-10T16:36:32.352Z",
+  "seed": {
+    "lots": 5000,
+    "levels": 10,
+    "seconds": 56,
+    "eventWriteMs": {
+      "n": 5000,
+      "p50": 88,
+      "p95": 116,
+      "p99": 136,
+      "max": 200
+    }
+  },
+  "trace": {
+    "backward": {
+      "n": 40,
+      "p50": 614,
+      "p95": 709,
+      "p99": 756,
+      "max": 756,
+      "maxLotsReached": 2753
+    },
+    "forward": {
+      "n": 40,
+      "p50": 632,
+      "p95": 724,
+      "p99": 733,
+      "max": 733,
+      "maxLotsReached": 2753
+    },
+    "nfr": "p95 < 2000 ms",
+    "pass": true
+  },
+  "publicPage": {
+    "requests": 2000,
+    "concurrency": 20,
+    "requestsPerSecond": 119,
+    "statuses": {
+      "200": 2000
+    },
+    "ttfbMs": {
+      "n": 2000,
+      "p50": 165,
+      "p95": 194,
+      "p99": 212,
+      "max": 301
+    },
+    "nfr": "TTFB p95 < 500 ms",
+    "pass": true
+  }
+}

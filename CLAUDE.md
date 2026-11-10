@@ -13,7 +13,7 @@ Casitrace is a food traceability and evidence platform. The plan is `roadmap-v2.
 
 | Task | Command |
 |---|---|
-| Start services | `docker compose up -d --wait && docker compose up s3-init` (first ClamAV start takes 1–2 min) |
+| Start services | `docker compose up -d --wait && docker compose up s3-init` (first ClamAV start takes 1–2 min; includes `openbao` dev KMS) |
 | Install (also generates Prisma client) | `bun install` |
 | Database setup (migrations, runtime role login, test DB) | `bun run db:setup` |
 | Run API + worker + web | `bun run dev` (open :5173; API under :5173/api, docs at /api/docs; mail at :8025) |
@@ -23,6 +23,8 @@ Casitrace is a food traceability and evidence platform. The plan is `roadmap-v2.
 | Lint / format | `bun run lint` / `bun run format` |
 | Typecheck | `bun run typecheck` |
 | Regenerate API client after route changes | `bun run openapi` (CI fails if stale) |
+| Production rehearsal (staging) | `infrastructure/production/staging.sh up` (then `restore-drill.sh`, `load-test.sh`) |
+| Alert rule tests | `docker run --rm -v "$PWD/infrastructure/production/monitoring:/m" --entrypoint promtool prom/prometheus:v3.5.0 test rules /m/alerts.test.yml` |
 
 ## Layout
 
@@ -116,6 +118,19 @@ Casitrace is a food traceability and evidence platform. The plan is `roadmap-v2.
 ## Worker throughput
 
 - The domain-event consumer runs `WORKER_CONCURRENCY` jobs in parallel (default 4); the worker's DB pool is sized `WORKER_CONCURRENCY + 4`. A pool smaller than the concurrency made email jobs wait up to 30 s for a connection (found in P8). Keep handlers idempotent.
+
+## Production and operations (P9, ADR 0015)
+
+- Deployment: `infrastructure/production/` (one EU VM, Docker Compose, Caddy in front; only Caddy is public). `staging.sh up` rehearses it locally with production images and configuration; `restore-drill.sh` and `load-test.sh` run against it. Runbooks: `docs/operations/runbooks/`.
+- **Signing in production uses the KMS** (`PASSPORT_SIGNER=kms`, OpenBao Transit, AppRole); config refuses a local key or a static KMS token when `NODE_ENV=production`. `Signer.sign` returns the key ID it used: store that one, not `signer.kid`. KMS tests run against the `openbao` compose service (`kms-signer.test.ts`); the API policy is `infrastructure/production/kms/api-signer-policy.hcl`.
+- **Client IP** = `clientIp(c)` (`platform/client-ip.ts`): the single X-Forwarded-For value Caddy sets; lists or malformed values share an "untrusted" bucket. Never read X-Forwarded-For directly.
+- **Public rate limits** use the shared Postgres store (`rateLimit(store, salt, name, max)`; keys hashed, no IPs stored).
+- Public HTML gets a strict CSP (`PUBLIC_HTML_CSP`: no scripts, stylesheet by hash) and `Vary: Accept-Language`. Do not add inline `style=` attributes or scripts to `html.ts`; build Intl formatters once per language.
+- Public passport reads go through `loadPublicPassport` (one read; parsed + verified versions cached by digest for 10 min; live facts every request).
+- Observability: `@casitrace/observability` (OpenTelemetry traces, Prometheus registry). Metric labels are route patterns or fixed names, never IDs. `/api/metrics` and the worker's `:9464/metrics` need `METRICS_TOKEN`. Alert rules: `infrastructure/production/monitoring/alerts.yml` with promtool tests (`alerts.test.yml`, CI); each alert links a runbook section.
+- Retention: `apps/worker/src/retention.ts` (daily) deletes only what `docs/compliance/data-retention.md` marks automatic. Business records are never deleted by jobs.
+- Pilot KPIs: `apps/api/scripts/pilot-kpis.ts`; capture forms send `x-capture-ms` / `x-capture-device`, stored in the event's audit entry.
+- Shell scripts in `infrastructure/production` run with `set -eu`; values from `.env.staging` must not leak into later compose calls (shell env beats `--env-file`).
 
 ## Auth (ADR 0009)
 

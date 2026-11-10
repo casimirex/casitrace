@@ -23,15 +23,18 @@ jobs:
       - name: Configure environment
         run: cp .env.example .env
 
-      - name: Start services (Postgres, S3, Mailpit)
+      - name: Start services (Postgres, S3, Mailpit, ClamAV, OpenBao)
         # ClamAV downloads signatures on first start (1-2 min).
-        run: docker compose up -d --wait postgres s3 mailpit clamav && docker compose up s3-init
+        run: docker compose up -d --wait postgres s3 mailpit clamav openbao && docker compose up s3-init
 
       - name: Install dependencies (also generates the Prisma client)
         run: bun install --frozen-lockfile
 
       - name: Lint
         run: bun run lint
+
+      - name: "Dependency audit (NFR: no critical/high vulnerabilities open > 7 days)"
+        run: bun audit --audit-level=high
 
       - name: OpenAPI client is up to date
         run: |
@@ -49,6 +52,18 @@ jobs:
 
       - name: Build
         run: bun run build
+
+      - name: Alert rules (promtool unit tests)
+        run: |
+          docker run --rm -v "$PWD/infrastructure/production/monitoring:/m" --entrypoint promtool \
+            prom/prometheus:v3.5.0 check rules /m/alerts.yml
+          docker run --rm -v "$PWD/infrastructure/production/monitoring:/m" --entrypoint promtool \
+            prom/prometheus:v3.5.0 test rules /m/alerts.test.yml
+
+      - name: Production images build
+        run: |
+          docker build -f infrastructure/production/Dockerfile --target app -t casitrace/app:ci .
+          docker build -f infrastructure/production/Dockerfile --target web -t casitrace/web:ci .
 
       - name: Install Playwright browser
         run: bunx playwright install --with-deps chromium

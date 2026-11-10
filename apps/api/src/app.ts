@@ -1,3 +1,4 @@
+import { metricsAuthorized, Registry } from "@casitrace/observability";
 import { AppError } from "@casitrace/shared";
 import { swaggerUI } from "@hono/swagger-ui";
 import { OpenAPIHono } from "@hono/zod-openapi";
@@ -5,8 +6,9 @@ import { bodyLimit } from "hono/body-limit";
 import { csrf } from "hono/csrf";
 import { secureHeaders } from "hono/secure-headers";
 import type { AppEnv, Deps } from "./context";
-import { fromZodError, onError, onNotFound } from "./middleware/errors";
+import { fromZodError, isUnhandled, onError, onNotFound } from "./middleware/errors";
 import { requestContext } from "./middleware/request-context";
+import { httpMetrics, telemetry } from "./middleware/telemetry";
 import { accessRoutes } from "./modules/access/routes";
 import { catalogRoutes } from "./modules/catalog/presentation/routes";
 import { evidenceRoutes } from "./modules/evidence/presentation/routes";
@@ -74,10 +76,25 @@ export const createApp = (deps: Deps) => {
   api.doc31("/openapi.json", API_INFO);
   api.get("/docs", swaggerUI({ url: "/api/openapi.json" }));
 
+  const registry = deps.metrics ?? new Registry();
+  const m = httpMetrics(registry);
+  registry.gauge("casitrace_build_info", "Build version").set({ service: "api", version: deps.version }, 1);
+  const memory = registry.gauge("casitrace_process_resident_memory_bytes", "Resident memory");
+  registry.onCollect(async () => memory.set({ service: "api" }, process.memoryUsage().rss));
+
   const app = newRouter();
+  app.use("*", telemetry(m));
   app.use("*", requestContext(deps.logger));
   app.use("*", secureHeaders());
-  app.onError(onError);
+  app.onError((err, c) => {
+    if (isUnhandled(err)) m.errors.inc({ service: "api" });
+    return onError(err, c);
+  });
+  // Prometheus scrape endpoint; not part of the public API (no OpenAPI entry), token-protected.
+  app.get("/api/metrics", async (c) => {
+    if (!metricsAuthorized(c.req.header("authorization"), deps.metricsToken)) return onNotFound(c);
+    return c.body(await registry.render(), 200, { "content-type": "text/plain; version=0.0.4" });
+  });
   app.notFound(onNotFound);
   app.route("/api", api);
   return app;

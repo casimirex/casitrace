@@ -1,0 +1,109 @@
+# promtool unit tests for alerts.yml:
+#   docker run --rm -v "$PWD:/m" --entrypoint promtool prom/prometheus:v3.5.0 test rules /m/alerts.test.yml
+rule_files: [alerts.yml]
+evaluation_interval: 1m
+
+tests:
+  - name: worker down for 2 minutes pages
+    interval: 1m
+    input_series:
+      - series: 'up{job="worker", instance="worker:9464"}'
+        values: "1 1 0 0 0 0"
+    alert_rule_test:
+      - eval_time: 3m
+        alertname: WorkerDown
+        exp_alerts: []
+      - eval_time: 5m
+        alertname: WorkerDown
+        exp_alerts:
+          - exp_labels: { severity: page, job: worker, instance: "worker:9464" }
+            exp_annotations:
+              summary: "Worker is down: emails, scans and recall notices are not being sent"
+              runbook: docs/operations/runbooks/incident-response.md#worker-down
+
+  - name: 5xx rate above 5 % for 5 minutes pages; below does not
+    interval: 1m
+    input_series:
+      - series: 'casitrace_http_requests_total{method="GET", route="/a", status="2xx"}'
+        values: "0+90x15"
+      - series: 'casitrace_http_requests_total{method="GET", route="/a", status="5xx"}'
+        values: "0+10x15"
+      - series: 'casitrace_http_requests_total{method="GET", route="/b", status="2xx"}'
+        values: "0+1000x15"
+    alert_rule_test:
+      - eval_time: 12m
+        alertname: HighErrorRate
+        exp_alerts: []
+
+  - name: 5xx rate high
+    interval: 1m
+    input_series:
+      - series: 'casitrace_http_requests_total{method="GET", route="/a", status="2xx"}'
+        values: "0+90x15"
+      - series: 'casitrace_http_requests_total{method="GET", route="/a", status="5xx"}'
+        values: "0+10x15"
+    alert_rule_test:
+      - eval_time: 12m
+        alertname: HighErrorRate
+        exp_alerts:
+          - exp_labels: { severity: page }
+            exp_annotations:
+              summary: "More than 5 % of API requests fail with a server error"
+              runbook: docs/operations/runbooks/incident-response.md#errors
+
+  - name: outbox stuck
+    interval: 1m
+    input_series:
+      - series: casitrace_outbox_oldest_pending_age_seconds
+        values: "0 60 400 460 520 580 640 700 760 820"
+    alert_rule_test:
+      - eval_time: 9m
+        alertname: OutboxBacklog
+        exp_alerts:
+          - exp_labels: { severity: page }
+            exp_annotations:
+              summary: "Domain events are not being relayed (oldest waiting 13m 40s)"
+              runbook: docs/operations/runbooks/incident-response.md#worker-down
+
+  - name: no base backup for 26 hours pages
+    interval: 1m
+    input_series:
+      - series: casitrace_backup_last_success_timestamp_seconds
+        values: "0x1700"
+    alert_rule_test:
+      - eval_time: 27h
+        alertname: BackupMissing
+        exp_alerts:
+          - exp_labels: { severity: page }
+            exp_annotations:
+              summary: "No successful base backup for more than 26 hours"
+              runbook: docs/operations/runbooks/restore.md#backup-failed
+
+  - name: recent backup does not alert
+    interval: 1m
+    input_series:
+      # A backup recorded at t=20h (72000 s).
+      - series: casitrace_backup_last_success_timestamp_seconds
+        values: "0x1199 72000x500"
+    alert_rule_test:
+      - eval_time: 27h
+        alertname: BackupMissing
+        exp_alerts: []
+
+  - name: slow public page
+    interval: 1m
+    input_series:
+      - series: 'casitrace_http_request_duration_seconds_bucket{method="GET", route="/api/v1/public/p/:publicId", le="0.5"}'
+        values: "0+1x40"
+      - series: 'casitrace_http_request_duration_seconds_bucket{method="GET", route="/api/v1/public/p/:publicId", le="1"}'
+        values: "0+10x40"
+      - series: 'casitrace_http_request_duration_seconds_bucket{method="GET", route="/api/v1/public/p/:publicId", le="+Inf"}'
+        values: "0+10x40"
+    alert_rule_test:
+      - eval_time: 30m
+        alertname: PublicPageSlow
+        exp_alerts:
+          - exp_labels: { severity: ticket }
+            exp_annotations:
+              summary: "Public passport page p95 above 500 ms (NFR)"
+              runbook: docs/operations/runbooks/incident-response.md#slow

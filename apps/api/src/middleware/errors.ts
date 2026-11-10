@@ -26,6 +26,9 @@ export const fromZodError = (error: ZodError): AppError =>
     error.issues.map((i) => ({ path: i.path.join("."), message: i.message })),
   );
 
+/** True for errors that are bugs (not AppError / HTTP rejections). */
+export const isUnhandled = (err: unknown) => !isAppError(err) && !(err instanceof HTTPException);
+
 export const onError: ErrorHandler<AppEnv> = (err, c) => {
   let appErr: AppError;
   if (isAppError(err)) {

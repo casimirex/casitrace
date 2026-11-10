@@ -32,12 +32,39 @@ export interface PublicKeyInfo {
   status: "current" | "previous";
 }
 
+/**
+ * Signs passports and verifies them. Implementations: a local key (`createSigner`, development and tests)
+ * and a KMS (`createTransitSigner`, production, ADR 0015). `sign` returns the key ID it actually used,
+ * which matters when the KMS key rotates between reading `kid` and signing.
+ */
 export interface Signer {
-  kid: string;
-  sign(canonical: string): Promise<string>;
-  publicKeys: PublicKeyInfo[];
+  /** Key ID new signatures are made with. */
+  readonly kid: string;
+  sign(canonical: string): Promise<{ signature: string; kid: string }>;
+  /** Current and previous public keys; previous keys keep old passports verifiable. */
+  readonly publicKeys: PublicKeyInfo[];
   verify(canonical: string, signature: string, kid: string): Promise<boolean>;
 }
+
+export const importVerifyKey = (raw: Uint8Array) =>
+  crypto.subtle.importKey("raw", new Uint8Array(raw), { name: "Ed25519" }, true, ["verify"]);
+
+export const verifyWith = (key: CryptoKey, canonical: string, signature: string) =>
+  crypto.subtle.verify(
+    "Ed25519",
+    key,
+    Buffer.from(signature, "base64url"),
+    new TextEncoder().encode(canonical),
+  );
+
+export const publicKeyInfo = (kid: string, x: string, status: PublicKeyInfo["status"]): PublicKeyInfo => ({
+  kid,
+  kty: "OKP",
+  crv: "Ed25519",
+  alg: "EdDSA",
+  x,
+  status,
+});
 
 export const keyIdFor = (rawPublic: Uint8Array) =>
   `ed25519-${new Bun.CryptoHasher("sha256").update(rawPublic).digest("hex").slice(0, 16)}`;
@@ -62,43 +89,23 @@ export const createSigner = async (
   const x = jwk.x as string;
   const raw = Buffer.from(x, "base64url");
   const kid = keyIdFor(raw);
-  const keys = new Map<string, CryptoKey>([
-    [kid, await crypto.subtle.importKey("raw", raw, { name: "Ed25519" }, true, ["verify"])],
-  ]);
-  for (const p of previous) {
-    keys.set(
-      p.kid,
-      await crypto.subtle.importKey("raw", Buffer.from(p.x, "base64url"), { name: "Ed25519" }, true, [
-        "verify",
-      ]),
-    );
-  }
+  const keys = new Map<string, CryptoKey>([[kid, await importVerifyKey(raw)]]);
+  for (const p of previous) keys.set(p.kid, await importVerifyKey(Buffer.from(p.x, "base64url")));
   return {
     kid,
     publicKeys: [
-      { kid, kty: "OKP", crv: "Ed25519", alg: "EdDSA", x, status: "current" },
-      ...previous.map((p) => ({
-        kid: p.kid,
-        kty: "OKP" as const,
-        crv: "Ed25519" as const,
-        alg: "EdDSA" as const,
-        x: p.x,
-        status: "previous" as const,
-      })),
+      publicKeyInfo(kid, x, "current"),
+      ...previous.map((p) => publicKeyInfo(p.kid, p.x, "previous")),
     ],
-    sign: async (canonical) =>
-      b64url(
+    sign: async (canonical) => ({
+      kid,
+      signature: b64url(
         new Uint8Array(await crypto.subtle.sign("Ed25519", privateKey, new TextEncoder().encode(canonical))),
       ),
+    }),
     verify: async (canonical, signature, k) => {
       const key = keys.get(k);
-      if (!key) return false;
-      return crypto.subtle.verify(
-        "Ed25519",
-        key,
-        Buffer.from(signature, "base64url"),
-        new TextEncoder().encode(canonical),
-      );
+      return key ? verifyWith(key, canonical, signature) : false;
     },
   };
 };

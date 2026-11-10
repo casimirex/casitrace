@@ -1,0 +1,8 @@
+# Public product pages, organisation pages and the directory may be indexed; the app and API may not.
+User-agent: *
+Allow: /p/
+Allow: /o/
+Allow: /directory
+Disallow: /orgs/
+Disallow: /api/
+Disallow: /account

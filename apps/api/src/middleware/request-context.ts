@@ -1,3 +1,4 @@
+import { currentTraceId } from "@casitrace/observability";
 import { newId } from "@casitrace/shared";
 import type { MiddlewareHandler } from "hono";
 import type { AppEnv } from "../context";
@@ -11,7 +12,8 @@ export const requestContext =
   async (c, next) => {
     const incoming = c.req.header("x-request-id");
     const requestId = incoming && SAFE_REQUEST_ID.test(incoming) ? incoming : newId();
-    const log = logger.child({ requestId });
+    const traceId = currentTraceId();
+    const log = logger.child(traceId ? { requestId, traceId } : { requestId });
     c.set("requestId", requestId);
     c.set("logger", log);
     c.header("x-request-id", requestId);

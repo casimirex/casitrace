@@ -1,5 +1,5 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { type FormEvent, type ReactNode, useEffect, useState } from "react";
+import { type FormEvent, type ReactNode, useEffect, useRef, useState } from "react";
 import { NavLink, useParams } from "react-router";
 import { Alert, Button, Card, Field, SelectField } from "../../components/ui";
 import { ApiError, api, unwrap } from "../../lib/api";
@@ -98,11 +98,30 @@ const useSubmit = (orgId: string) => {
   const queryClient = useQueryClient();
   const [state, setState] = useState<{ kind: "sent" | "queued" | "error"; message: string } | null>(null);
   const [busy, setBusy] = useState(false);
+  // Time from the first input in a form to submitting it (pilot KPI); one form is shown at a time.
+  const startedAt = useRef<number | null>(null);
+  useEffect(() => {
+    const onInput = () => {
+      startedAt.current ??= performance.now();
+    };
+    document.addEventListener("input", onInput, true);
+    return () => document.removeEventListener("input", onInput, true);
+  }, []);
   const submit = async (body: Parameters<typeof submitEvent>[1], label: string, form?: HTMLFormElement) => {
     setBusy(true);
     setState(null);
+    const capture =
+      startedAt.current === null
+        ? undefined
+        : {
+            ms: performance.now() - startedAt.current,
+            device: window.matchMedia("(pointer: coarse)").matches
+              ? ("touch" as const)
+              : ("desktop" as const),
+          };
     try {
-      const r = await submitEvent(orgId, body, label);
+      const r = await submitEvent(orgId, body, label, capture);
+      startedAt.current = null;
       setState(
         r === "sent"
           ? { kind: "sent", message: `${label} recorded.` }

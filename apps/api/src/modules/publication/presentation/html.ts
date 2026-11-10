@@ -154,17 +154,28 @@ export const esc = (v: unknown) =>
     (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c] ?? c,
   );
 
-const fmtDate = (d: string | undefined, lang: Lang) =>
-  d
-    ? new Intl.DateTimeFormat(lang === "it" ? "it-IT" : "en-GB", {
-        dateStyle: "long",
-        timeZone: "UTC",
-      }).format(new Date(`${d.slice(0, 10)}T00:00:00Z`))
-    : "";
+// Intl formatters are expensive to build (P9 load test: one per origin area made large pages take
+// 200 ms of CPU); build one per language and reuse it.
+const dateFormats = new Map<Lang, Intl.DateTimeFormat>();
+const regionNames = new Map<Lang, Intl.DisplayNames>();
+const fmtDate = (d: string | undefined, lang: Lang) => {
+  if (!d) return "";
+  let f = dateFormats.get(lang);
+  if (!f) {
+    f = new Intl.DateTimeFormat(lang === "it" ? "it-IT" : "en-GB", { dateStyle: "long", timeZone: "UTC" });
+    dateFormats.set(lang, f);
+  }
+  return f.format(new Date(`${d.slice(0, 10)}T00:00:00Z`));
+};
 const country = (code: string | undefined, lang: Lang) => {
   if (!code) return "";
   try {
-    return new Intl.DisplayNames([lang], { type: "region" }).of(code) ?? code;
+    let n = regionNames.get(lang);
+    if (!n) {
+      n = new Intl.DisplayNames([lang], { type: "region" });
+      regionNames.set(lang, n);
+    }
+    return n.of(code) ?? code;
   } catch {
     return code;
   }
@@ -187,7 +198,14 @@ a{color:var(--brand)}nav.lang{float:right;font-size:.9rem}footer{margin-top:2rem
 form.search{display:flex;gap:8px}input[type=search]{flex:1;min-width:0;padding:9px 10px;border:1px solid var(--line);border-radius:4px;background:var(--surface);color:var(--ink);font:inherit}
 button{padding:9px 14px;border:0;border-radius:4px;background:var(--brand);color:var(--bg);font:inherit;font-weight:600}
 a:focus-visible,button:focus-visible,input:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+.sr-only{position:absolute;left:-9999px}
 `;
+
+/**
+ * Content-Security-Policy for the public pages (threat model T-6): no scripts at all, only our own
+ * inline stylesheet (by hash), forms post only to us, never framed.
+ */
+export const PUBLIC_HTML_CSP = `default-src 'none'; style-src 'sha256-${new Bun.CryptoHasher("sha256").update(CSS).digest("base64")}'; img-src 'self' data:; form-action 'self'; base-uri 'none'; frame-ancestors 'none'`;
 
 const page = (lang: Lang, title: string, body: string, langLinks: string) => `<!doctype html>
 <html lang="${lang}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
@@ -236,16 +254,19 @@ export const renderPassport = (v: PassportView, lang: Lang) => {
     facts.push(["", esc(s.lot.milling.coldExtracted ? t.coldExtracted : t.notColdExtracted)]);
   if (s.lot?.bestBefore) facts.push([t.bestBefore, esc(fmtDate(s.lot.bestBefore, lang))]);
   if (s.product.organicDeclared) facts.push(["", esc(t.organic)]);
-  const areas = (s.lot?.originAreas ?? [])
-    .map((a) => {
-      const where = [a.region, country(a.country, lang)].filter(Boolean).join(", ");
-      const map =
-        a.approxLat !== undefined && a.approxLon !== undefined
-          ? ` <a href="https://www.openstreetmap.org/?mlat=${a.approxLat}&amp;mlon=${a.approxLon}#map=10/${a.approxLat}/${a.approxLon}" rel="noopener">${t.approx} ${a.approxLat}°, ${a.approxLon}° ↗</a>`
-          : "";
-      return `<li>${esc(where || "—")}${map}</li>`;
-    })
-    .join("");
+  // Many harvest lots from the same grove give identical lines: show each place once.
+  const areas = [
+    ...new Set(
+      (s.lot?.originAreas ?? []).map((a) => {
+        const where = [a.region, country(a.country, lang)].filter(Boolean).join(", ");
+        const map =
+          a.approxLat !== undefined && a.approxLon !== undefined
+            ? ` <a href="https://www.openstreetmap.org/?mlat=${a.approxLat}&amp;mlon=${a.approxLon}#map=10/${a.approxLat}/${a.approxLon}" rel="noopener">${t.approx} ${a.approxLat}°, ${a.approxLon}° ↗</a>`
+            : "";
+        return `<li>${esc(where || "—")}${map}</li>`;
+      }),
+    ),
+  ].join("");
   const live = new Map(v.live.certificates.map((c) => [c.evidenceId, c.status]));
   const certs = s.certificates.length
     ? `<ul>${s.certificates
@@ -320,7 +341,7 @@ export const renderDirectory = (q: string, results: DirectoryView[] | null, lang
         : `<p class="muted">${t.noResults}</p>`;
   const body = `<h1>${t.directory}</h1>
 <form class="search" method="get" action="/directory" role="search"><input type="hidden" name="lang" value="${lang}">
-<label for="q" class="muted" style="position:absolute;left:-9999px">${t.searchHint}</label>
+<label for="q" class="sr-only">${t.searchHint}</label>
 <input id="q" type="search" name="q" minlength="2" maxlength="80" value="${esc(q)}" placeholder="${t.searchHint}"><button type="submit">${t.search}</button></form>${list}`;
   return page(
     lang,

@@ -61,6 +61,18 @@ services:
     image: axllent/mailpit:v1.27.0
     ports: ["1025:1025", "8025:8025"]
 
+  # Key management for the passport signing key (ADR 0015). Dev mode: in-memory, root token, unsealed.
+  # Production runs OpenBao in server mode (see docs/operations/runbooks/key-rotation.md).
+  openbao:
+    image: openbao/openbao:2.4.1
+    command: server -dev -dev-root-token-id=dev-root-token -dev-listen-address=0.0.0.0:8200
+    ports: ["8200:8200"]
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:8200/v1/sys/health || exit 1"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
 volumes:
   clamdb:
   pgdata:

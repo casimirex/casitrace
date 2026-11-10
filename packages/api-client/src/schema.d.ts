@@ -7577,6 +7577,7 @@ export interface paths {
                 query?: {
                     lang?: "en" | "it";
                     v?: number;
+                    src?: "qr";
                 };
                 header?: never;
                 path: {
@@ -9508,6 +9509,10 @@ export interface components {
                 digest: string;
                 keyId: string;
             }[];
+            views30d: {
+                qr: number;
+                page: number;
+            };
             /** Format: date-time */
             updatedAt: string;
         };

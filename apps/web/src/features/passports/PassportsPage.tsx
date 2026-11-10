@@ -229,6 +229,9 @@ export function PassportDetailPage() {
               <a href={p.publicUrl} target="_blank" rel="noopener" className="text-brand underline">
                 Open the public page
               </a>
+              <p className="text-muted" data-testid="passport-views">
+                Last 30 days: {p.views30d.qr} QR scans · {p.views30d.page} other page views
+              </p>
             </div>
           ) : (
             <p className="text-sm text-muted">Publish first; the QR code then never changes.</p>

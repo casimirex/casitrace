@@ -18,7 +18,8 @@ export default defineConfig({
       timeout: 60_000,
     },
     {
-      command: "bun --cwd ../worker --env-file=../../.env src/main.ts",
+      // Port 0: the health/metrics server must not collide with a running dev worker.
+      command: "WORKER_METRICS_PORT=0 bun --cwd ../worker --env-file=../../.env src/main.ts",
       wait: { stdout: /worker started/ },
       reuseExistingServer: !process.env.CI,
       timeout: 60_000,

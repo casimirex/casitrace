@@ -16,6 +16,7 @@
   "dependencies": {
     "@casitrace/contracts": "workspace:*",
     "@casitrace/db": "workspace:*",
+    "@casitrace/observability": "workspace:*",
     "@casitrace/shared": "workspace:*",
     "@hono/swagger-ui": "0.6.1",
     "@hono/zod-openapi": "1.6.3",

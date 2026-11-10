@@ -1,0 +1,39 @@
+# Local staging rehearsal: replaces the external services of a real deployment (managed S3 for
+# evidence and backups, SMTP) with local containers. Used by staging.sh. Never use in production.
+services:
+  s3:
+    image: chrislusf/seaweedfs:3.97
+    command: server -dir=/data -s3 -s3.port=8333 -s3.config=/etc/seaweedfs/s3.json -master.volumeSizeLimitMB=256
+    volumes:
+      - s3data:/data
+      - ../docker/seaweedfs-s3.json:/etc/seaweedfs/s3.json:ro
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://127.0.0.1:8333/healthz || exit 1"]
+      interval: 3s
+      timeout: 3s
+      retries: 40
+    networks: [internal]
+
+  s3-init:
+    image: chrislusf/seaweedfs:3.97
+    depends_on: { s3: { condition: service_healthy } }
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        for b in casitrace-evidence casitrace-backups casitrace-evidence-backup; do
+          echo "s3.bucket.create -name $$b" | weed shell -master=s3:9333 2>&1 | grep -v 'already exists' || true
+        done
+    networks: [internal]
+
+  mailpit:
+    image: axllent/mailpit:v1.27.0
+    ports: ["127.0.0.1:${MAILPIT_PORT:-8026}:8025"]
+    networks: [internal]
+
+  postgres:
+    depends_on: { s3-init: { condition: service_completed_successfully } }
+  api:
+    depends_on: { s3-init: { condition: service_completed_successfully } }
+
+volumes:
+  s3data:

@@ -26,7 +26,7 @@ export const buildAuth = (rateLimit = true) =>
   createAuth({ db, logger, secret: env.AUTH_SECRET, webOrigin: env.WEB_ORIGIN, rateLimit });
 export const auth = buildAuth();
 
-export const signer = await createSigner(env.PASSPORT_SIGNING_KEY, env.PASSPORT_PREVIOUS_KEYS);
+export const signer = await createSigner(env.PASSPORT_SIGNING_KEY ?? "", env.PASSPORT_PREVIOUS_KEYS);
 export const buildApp = (overrides: Partial<Deps> = {}) =>
   createApp({
     db,

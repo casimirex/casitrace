@@ -1,0 +1,57 @@
+# Public entry point (ADR 0015). Only this container is reachable from the internet.
+# Caddy replaces any client-supplied X-Forwarded-For with the connecting address (no trusted_proxies
+# configured), which the API's rate limits rely on (threat model T-2).
+{
+	admin off
+	servers {
+		timeouts {
+			read_header 10s
+			idle 60s
+		}
+	}
+}
+
+{$SITE_ADDRESS::8080} {
+	encode zstd gzip
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options nosniff
+		Referrer-Policy strict-origin-when-cross-origin
+		Permissions-Policy "camera=(self), geolocation=(self), microphone=()"
+		-Server
+	}
+
+	# Metrics are scraped on the internal network only.
+	respond /api/metrics 404
+
+	handle /api/* {
+		reverse_proxy api:3000
+	}
+	# Public pages and the GS1 Digital Link resolver (served by the API, no JavaScript).
+	handle /p/* {
+		rewrite * /api/v1/public{uri}
+		reverse_proxy api:3000
+	}
+	handle /o/* {
+		rewrite * /api/v1/public{uri}
+		reverse_proxy api:3000
+	}
+	handle /01/* {
+		rewrite * /api/v1/r{uri}
+		reverse_proxy api:3000
+	}
+	handle /directory {
+		rewrite * /api/v1/public/directory-page?{query}
+		reverse_proxy api:3000
+	}
+
+	# The web app (single-page; hashed assets are immutable).
+	handle {
+		root * /srv
+		@assets path /assets/*
+		header @assets Cache-Control "public, max-age=31536000, immutable"
+		header Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self'; font-src 'self'; form-action 'self'; base-uri 'none'; frame-ancestors 'none'; object-src 'none'"
+		try_files {path} /index.html
+		file_server
+	}
+}

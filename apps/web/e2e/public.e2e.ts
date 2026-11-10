@@ -97,7 +97,8 @@ test("publish a lot's public page; its QR link opens the page on a phone over 4G
   const started = Date.now();
   await p.goto(qrPayload, { waitUntil: "load" });
   const elapsed = Date.now() - started;
-  expect(p.url()).toMatch(/\/p\/[a-z0-9]+$/);
+  // The resolver tags the visit as a QR scan for the view counts.
+  expect(p.url()).toMatch(/\/p\/[a-z0-9]+\?src=qr$/);
   await expect(p.getByRole("heading", { name: "Olio extravergine 500 ml" })).toBeVisible();
   await expect(p.getByText("B500-OPEN-1")).toBeVisible();
   await expect(p.getByText(/Signature valid/)).toBeVisible();

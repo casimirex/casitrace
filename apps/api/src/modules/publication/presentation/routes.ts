@@ -14,7 +14,7 @@ import QRCode from "qrcode";
 import type { AppEnv, Deps } from "../../../context";
 import { withAccess } from "../../../platform/access";
 import { errorResponses as E, json, orgCommand } from "../../../platform/http";
-import { rateLimit } from "../../../platform/rate-limit";
+import { postgresRateLimitStore, rateLimit } from "../../../platform/rate-limit";
 import {
   createPassport,
   getPassport,
@@ -25,13 +25,15 @@ import {
   withdrawPassport,
 } from "../application/passports";
 import {
+  countPassportView,
   getPublicPassport,
+  loadPublicPassport,
   publicOrganisation,
   resolveDigitalLink,
   searchDirectory,
   verifyPublicPassport,
 } from "../application/public";
-import { pickLang, renderDirectory, renderOrganisation, renderPassport } from "./html";
+import { PUBLIC_HTML_CSP, pickLang, renderDirectory, renderOrganisation, renderPassport } from "./html";
 
 const PassportParams = OrgIdParam.extend({
   passportId: z.uuid().openapi({ param: { name: "passportId", in: "path" } }),
@@ -63,9 +65,11 @@ export const publicationRoutes = (deps: Deps) => {
     createRoute(withAccess(deps, access, route));
   const Tag = ["Passports"];
   const Pub = ["Public"];
-  const pages = rateLimit("public-pages", 240);
-  const api = rateLimit("public-api", 120);
-  const search = rateLimit("directory-search", 30);
+  const store = deps.rateLimits ?? postgresRateLimitStore(db);
+  const salt = deps.rateLimitSalt ?? "casitrace";
+  const pages = rateLimit(store, salt, "public-pages", 240);
+  const api = rateLimit(store, salt, "public-api", 120);
+  const search = rateLimit(store, salt, "directory-search", 30);
 
   const routes = {
     list: r(
@@ -243,7 +247,11 @@ export const publicationRoutes = (deps: Deps) => {
         path: "/public/p/{publicId}",
         tags: Pub,
         summary: "The public product page (HTML, works without JavaScript)",
-        request: { params: PublicIdParam, query: LangQuery },
+        request: {
+          params: PublicIdParam,
+          // src=qr is added by the GS1 resolver so views from a scanned QR code are counted as scans.
+          query: LangQuery.extend({ src: z.enum(["qr"]).optional() }),
+        },
         responses: { 200: { description: "HTML", ...html }, 404: { description: "Not found", ...html } },
       },
     ),
@@ -323,11 +331,17 @@ export const publicationRoutes = (deps: Deps) => {
     app.use(path, api);
   app.use("/public/directory", search);
   for (const path of ["/public/p/*", "/public/directory-page", "/public/o/*", "/r/*"]) app.use(path, pages);
-  // Public responses may be cached briefly by browsers and CDNs; signed content never changes per version.
+  // Public responses may be cached briefly by browsers and CDNs (30 s keeps a recall banner well inside the
+  // 1-minute target; view counts are therefore a lower bound).
   app.use("/public/*", async (c, next) => {
     await next();
     if (c.res.status === 200 && !c.res.headers.get("cache-control"))
-      c.header("cache-control", "public, max-age=60");
+      c.header("cache-control", "public, max-age=30");
+    if (c.res.headers.get("content-type")?.startsWith("text/html")) {
+      c.header("content-security-policy", PUBLIC_HTML_CSP);
+      // The language is negotiated from Accept-Language: caches must keep one copy per language.
+      c.header("vary", "Accept-Language");
+    }
   });
 
   return app
@@ -381,7 +395,7 @@ export const publicationRoutes = (deps: Deps) => {
     .openapi(routes.passport, async (c) => {
       const { publicId } = valid<{ publicId: string }>(c, "param");
       return c.json(
-        await getPublicPassport(db, publicId, valid<{ version?: number }>(c, "query").version),
+        await getPublicPassport(db, cfg.signer, publicId, valid<{ version?: number }>(c, "query").version),
         200,
       );
     })
@@ -402,8 +416,12 @@ export const publicationRoutes = (deps: Deps) => {
       const { publicId } = valid<{ publicId: string }>(c, "param");
       const { lang: l, v } = valid<{ lang?: "en" | "it"; v?: number }>(c, "query");
       const lang = pickLang(l, c.req.header("accept-language"));
-      const p = await getPublicPassport(db, publicId, v);
-      const check = await verifyPublicPassport(db, cfg.signer, publicId, v);
+      const { passport: p, check } = await loadPublicPassport(db, cfg.signer, publicId, v);
+      // Counted after the lookup succeeds; never delays or fails the page.
+      const src = valid<{ src?: "qr" }>(c, "query").src === "qr" ? "qr" : "page";
+      void countPassportView(db, publicId, src).catch((e) =>
+        c.get("logger").warn({ err: e }, "view count failed"),
+      );
       return c.html(renderPassport({ ...p, signatureValid: check.valid }, lang), 200);
     })
     .openapi(routes.directoryPage, async (c) => {
@@ -420,9 +438,9 @@ export const publicationRoutes = (deps: Deps) => {
     })
     .openapi(routes.resolveLot, async (c) => {
       const { gtin, lotCode } = valid<{ gtin: string; lotCode: string }>(c, "param");
-      return c.redirect(`/p/${await resolveDigitalLink(db, gtin, decodeURIComponent(lotCode))}`, 302);
+      return c.redirect(`/p/${await resolveDigitalLink(db, gtin, decodeURIComponent(lotCode))}?src=qr`, 302);
     })
     .openapi(routes.resolveProduct, async (c) =>
-      c.redirect(`/p/${await resolveDigitalLink(db, valid<{ gtin: string }>(c, "param").gtin)}`, 302),
+      c.redirect(`/p/${await resolveDigitalLink(db, valid<{ gtin: string }>(c, "param").gtin)}?src=qr`, 302),
     );
 };

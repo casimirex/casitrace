@@ -1,0 +1,30 @@
+# Rendered to alertmanager.yml by the deploy step (values from .env). Pages go to the on-call
+# address immediately and repeat hourly; tickets are batched.
+global:
+  smtp_smarthost: "${SMTP_HOST}:${SMTP_PORT}"
+  smtp_from: "${ALERT_FROM}"
+  smtp_require_tls: ${ALERT_SMTP_REQUIRE_TLS}
+  smtp_auth_username: "${SMTP_USER}"
+  smtp_auth_password: "${SMTP_PASSWORD}"
+
+route:
+  receiver: tickets
+  group_by: [alertname]
+  group_wait: 30s
+  group_interval: 5m
+  repeat_interval: 12h
+  routes:
+    - matchers: [severity="page"]
+      receiver: on-call
+      group_wait: 10s
+      repeat_interval: 1h
+
+receivers:
+  - name: on-call
+    email_configs:
+      - to: "${ALERT_ONCALL_EMAIL}"
+        send_resolved: true
+  - name: tickets
+    email_configs:
+      - to: "${ALERT_TICKETS_EMAIL}"
+        send_resolved: true

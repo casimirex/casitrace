@@ -8,7 +8,16 @@ export interface QueuedEvent {
   label: string;
   queuedAt: string;
   lastError?: string;
+  capture?: Capture;
 }
+
+/** How long recording took on this device (pilot KPI "time to record a lot event on a phone"). */
+export interface Capture {
+  ms: number;
+  device: "touch" | "desktop";
+}
+const captureHeaders = (c?: Capture): Record<string, string> =>
+  c ? { "x-capture-ms": String(Math.round(c.ms)), "x-capture-device": c.device } : {};
 
 const KEY = "casitrace.offline-events";
 const read = (): QueuedEvent[] => {
@@ -37,14 +46,21 @@ export const submitEvent = async (
   orgId: string,
   body: RecordEvent,
   label: string,
+  capture?: Capture,
 ): Promise<"sent" | "queued"> => {
   const withKey = { ...body, idempotencyKey: body.idempotencyKey ?? `web-${crypto.randomUUID()}` };
   try {
-    unwrap(await api.POST("/v1/orgs/{orgId}/events", { params: { path: { orgId } }, body: withKey }));
+    unwrap(
+      await api.POST("/v1/orgs/{orgId}/events", {
+        params: { path: { orgId } },
+        body: withKey,
+        headers: captureHeaders(capture),
+      }),
+    );
     return "sent";
   } catch (e) {
     if (e instanceof ApiError) throw e; // the server answered: show the problem, do not queue
-    write([...read(), { orgId, body: withKey, label, queuedAt: new Date().toISOString() }]);
+    write([...read(), { orgId, body: withKey, label, queuedAt: new Date().toISOString(), capture }]);
     return "queued";
   }
 };
@@ -59,6 +75,7 @@ export const flushQueue = async () => {
         await api.POST("/v1/orgs/{orgId}/events", {
           params: { path: { orgId: item.orgId } },
           body: item.body,
+          headers: captureHeaders(item.capture),
         }),
       );
     } catch (e) {

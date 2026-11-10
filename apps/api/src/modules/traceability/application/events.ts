@@ -366,7 +366,14 @@ export const recordEventTx = async (
 };
 
 /** Records an event with its audit entry and outbox event. */
-export const recordEvent = (db: Db, ctx: Ctx, input: RecordEvent) =>
+/** Capture timing reported by the web form (pilot KPI); informational, never trusted for anything else. */
+// A type alias (not an interface) so it is assignable to the audit log's JSON data.
+export type CaptureTiming = {
+  ms: number;
+  device: "touch" | "desktop";
+};
+
+export const recordEvent = (db: Db, ctx: Ctx, input: RecordEvent, capture?: CaptureTiming) =>
   runCommand(db, ctx, async (tx) => {
     const { eventId, replayed } = await recordEventTx(tx, ctx, input);
     return {
@@ -378,7 +385,7 @@ export const recordEvent = (db: Db, ctx: Ctx, input: RecordEvent) =>
               action: "trace.event_recorded",
               resourceType: "event",
               resourceId: eventId,
-              data: { type: input.type, process: input.process ?? null },
+              data: { type: input.type, process: input.process ?? null, ...(capture ? { capture } : {}) },
             },
       ],
       events: replayed

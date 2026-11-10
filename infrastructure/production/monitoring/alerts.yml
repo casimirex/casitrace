@@ -1,0 +1,86 @@
+# Alert rules (P9). Each alert names its runbook. Unit-tested with promtool: alerts.test.yml.
+groups:
+  - name: casitrace
+    rules:
+      - alert: ApiDown
+        expr: up{job="api"} == 0
+        for: 2m
+        labels: { severity: page }
+        annotations:
+          summary: "API is not answering metrics scrapes"
+          runbook: docs/operations/runbooks/incident-response.md#api-down
+
+      - alert: WorkerDown
+        expr: up{job="worker"} == 0
+        for: 2m
+        labels: { severity: page }
+        annotations:
+          summary: "Worker is down: emails, scans and recall notices are not being sent"
+          runbook: docs/operations/runbooks/incident-response.md#worker-down
+
+      - alert: HighErrorRate
+        expr: |
+          sum(rate(casitrace_http_requests_total{status="5xx"}[5m]))
+            / clamp_min(sum(rate(casitrace_http_requests_total[5m])), 0.001) > 0.05
+        for: 5m
+        labels: { severity: page }
+        annotations:
+          summary: "More than 5 % of API requests fail with a server error"
+          runbook: docs/operations/runbooks/incident-response.md#errors
+
+      - alert: UnhandledErrors
+        expr: increase(casitrace_unhandled_errors_total[15m]) > 0
+        labels: { severity: ticket }
+        annotations:
+          summary: "Unhandled server errors (bugs): find them in traces by request ID"
+          runbook: docs/operations/runbooks/incident-response.md#errors
+
+      - alert: OutboxBacklog
+        expr: casitrace_outbox_oldest_pending_age_seconds > 300
+        for: 5m
+        labels: { severity: page }
+        annotations:
+          summary: "Domain events are not being relayed (oldest waiting {{ $value | humanizeDuration }})"
+          runbook: docs/operations/runbooks/incident-response.md#worker-down
+
+      - alert: JobsFailing
+        expr: increase(casitrace_worker_jobs_total{outcome="error"}[30m]) > 5
+        labels: { severity: ticket }
+        annotations:
+          summary: "Background jobs failing ({{ $labels.type }})"
+          runbook: docs/operations/runbooks/incident-response.md#jobs-failing
+
+      - alert: PublicPageSlow
+        expr: |
+          histogram_quantile(0.95, sum by (le) (rate(casitrace_http_request_duration_seconds_bucket{route="/api/v1/public/p/:publicId"}[10m]))) > 0.5
+        for: 15m
+        labels: { severity: ticket }
+        annotations:
+          summary: "Public passport page p95 above 500 ms (NFR)"
+          runbook: docs/operations/runbooks/incident-response.md#slow
+
+      - alert: TraceSlow
+        expr: |
+          histogram_quantile(0.95, sum by (le) (rate(casitrace_http_request_duration_seconds_bucket{route=~".*/trace.*"}[10m]))) > 2
+        for: 15m
+        labels: { severity: ticket }
+        annotations:
+          summary: "Trace queries p95 above 2 s (NFR)"
+          runbook: docs/operations/runbooks/incident-response.md#slow
+
+      - alert: WalArchiveFailing
+        expr: casitrace_wal_archive_failing == 1
+        for: 10m
+        labels: { severity: page }
+        annotations:
+          summary: "WAL archiving is failing: point-in-time recovery is at risk and the disk will fill"
+          runbook: docs/operations/runbooks/restore.md#backup-failed
+
+      - alert: BackupMissing
+        expr: time() - casitrace_backup_last_success_timestamp_seconds > 26 * 3600
+        # Grace period: a new or restored environment takes its first base backup at start-up.
+        for: 30m
+        labels: { severity: page }
+        annotations:
+          summary: "No successful base backup for more than 26 hours"
+          runbook: docs/operations/runbooks/restore.md#backup-failed
