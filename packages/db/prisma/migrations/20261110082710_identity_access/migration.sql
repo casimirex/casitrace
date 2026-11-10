@@ -206,7 +206,6 @@ GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO casitrace
 GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO casitrace_app;
 ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO casitrace_app;
 ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT USAGE, SELECT ON SEQUENCES TO casitrace_app;
-REVOKE ALL ON "_prisma_migrations" FROM casitrace_app;
 
 -- Append-only tables: no UPDATE/DELETE/TRUNCATE privilege, in addition to the trigger (ADR 0007).
 REVOKE UPDATE, DELETE, TRUNCATE ON "audit_log" FROM casitrace_app;

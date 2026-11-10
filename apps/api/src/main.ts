@@ -16,7 +16,14 @@ const storage = createS3Storage({
   accessKeyId: env.S3_ACCESS_KEY_ID,
   secretAccessKey: env.S3_SECRET_ACCESS_KEY,
 });
-const auth = createAuth({ db, logger, secret: env.AUTH_SECRET, webOrigin: env.WEB_ORIGIN });
+const auth = createAuth({
+  db,
+  logger,
+  secret: env.AUTH_SECRET,
+  webOrigin: env.WEB_ORIGIN,
+  rateLimit: env.AUTH_RATE_LIMIT === "on",
+});
+if (env.AUTH_RATE_LIMIT === "off") logger.warn("auth rate limiting is OFF (test configuration)");
 
 const app = createApp({ db, storage, logger, auth, version: pkg.version, webOrigin: env.WEB_ORIGIN });
 const server = Bun.serve({ port: env.API_PORT, fetch: app.fetch });

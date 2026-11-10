@@ -1,0 +1,4 @@
+name,kind,email,country,registration_number,gln,address_line1,city,postal_code,notes
+Azienda Agricola Di Bari,supplier,info@dibari.example,IT,BA-123456,,Contrada Lama,Corato,70033,"Coratina grower, 18 ha"
+Oleificio Cooperativo Murgia,supplier,,IT,BA-654321,,,Ruvo di Puglia,70037,
+Gastronomia Rossi,customer,ordini@rossi.example,IT,MI-998877,,Via Roma 5,Milano,20121,Retail shop

@@ -1,17 +1,6 @@
-import { expect, type Page, test } from "@playwright/test";
+import { expect, test } from "@playwright/test";
+import { signUpAndVerify } from "./helpers";
 import { linkFromEmail, uniqueEmail } from "./mailpit";
-
-const PASSWORD = "correct horse battery staple";
-
-const signUpAndVerify = async (page: Page, name: string, email: string) => {
-  await page.goto("/sign-up");
-  await page.getByLabel("Full name").fill(name);
-  await page.getByLabel("Work email").fill(email);
-  await page.getByLabel("Password").fill(PASSWORD);
-  await page.getByRole("button", { name: "Create account" }).click();
-  await expect(page.getByRole("heading", { name: "Check your email" })).toBeVisible();
-  await page.goto(await linkFromEmail(email, /Confirm your email/));
-};
 
 test("register, verify, create an organisation, invite a colleague who joins as viewer", async ({
   browser,
@@ -53,6 +42,7 @@ test("forgotten password: reset by email, then sign in with the new password", a
   await expect(page.getByRole("heading", { name: "Sign in" })).toBeVisible();
 
   await page.getByRole("link", { name: "Forgot password?" }).click();
+  await expect(page.getByRole("heading", { name: "Reset your password" })).toBeVisible();
   await page.getByLabel("Email").fill(email);
   await page.getByRole("button", { name: "Send reset link" }).click();
   await page.goto(await linkFromEmail(email, /Reset your Casitrace password/));
@@ -62,6 +52,7 @@ test("forgotten password: reset by email, then sign in with the new password", a
   await expect(page.getByText("Password changed.")).toBeVisible();
 
   await page.getByRole("link", { name: "Sign in" }).click();
+  await expect(page.getByRole("heading", { name: "Sign in" })).toBeVisible();
   await page.getByLabel("Email").fill(email);
   await page.getByLabel("Password").fill(newPassword);
   await page.getByRole("button", { name: "Sign in" }).click();

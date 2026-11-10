@@ -133,6 +133,7 @@ model Organization {
 
   members     Member[]
   invitations Invitation[]
+  profile     OrganizationProfile?
 
   @@map("organization")
 }
@@ -204,4 +205,195 @@ model LoginThrottle {
   updatedAt   DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
 
   @@map("login_throttle")
+}
+
+// ─── parties (P3) ───────────────────────────────────────────────────────────
+// Every table below is tenant-owned: org_id + RLS (ADR 0008).
+
+/// Business identity of an organisation. Verification is set by platform staff (review queue).
+model OrganizationProfile {
+  orgId                   String    @id @map("org_id") @db.Uuid
+  legalName               String    @map("legal_name")
+  registrationNumber      String?   @map("registration_number")
+  vatNumber               String?   @map("vat_number")
+  countryCode             String    @map("country_code") @db.Char(2)
+  addressLine1            String?   @map("address_line1")
+  addressLine2            String?   @map("address_line2")
+  city                    String?
+  postalCode              String?   @map("postal_code")
+  region                  String?
+  /// grower | mill | bottler | blender | distributor | retailer | other
+  businessRoles           String[]  @map("business_roles")
+  website                 String?
+  description             String?
+  /// unverified | pending | verified
+  verificationStatus      String    @default("unverified") @map("verification_status")
+  verificationNote        String?   @map("verification_note")
+  verificationRequestedAt DateTime? @map("verification_requested_at") @db.Timestamptz(3)
+  verifiedAt              DateTime? @map("verified_at") @db.Timestamptz(3)
+  createdAt               DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt               DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  organization Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+
+  @@index([verificationStatus])
+  @@map("organization_profile")
+}
+
+/// Farm, grove plot, mill, tank, warehouse, bottling plant or store.
+model Location {
+  id           String    @id @db.Uuid
+  orgId        String    @map("org_id") @db.Uuid
+  /// Short code unique within the organisation, e.g. "GROVE-N-03".
+  code         String
+  name         String
+  /// farm | plot | facility | storage | warehouse | store | other
+  type         String
+  parentId     String?   @map("parent_id") @db.Uuid
+  gln          String?
+  countryCode  String?   @map("country_code") @db.Char(2)
+  addressLine1 String?   @map("address_line1")
+  city         String?
+  postalCode   String?   @map("postal_code")
+  region       String?
+  latitude     Decimal?  @db.Decimal(9, 6)
+  longitude    Decimal?  @db.Decimal(9, 6)
+  /// GeoJSON Polygon or MultiPolygon (RFC 7946, WGS 84), validated on input.
+  boundary     Json?
+  areaHa       Decimal?  @map("area_ha") @db.Decimal(14, 4)
+  archivedAt   DateTime? @map("archived_at") @db.Timestamptz(3)
+  createdAt    DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt    DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  parent   Location?  @relation("LocationParent", fields: [parentId], references: [id], onDelete: Restrict)
+  children Location[] @relation("LocationParent")
+
+  @@unique([orgId, code])
+  @@index([orgId, type])
+  @@map("location")
+}
+
+/// A supplier or customer. Either linked to an on-platform organisation or external (off-platform).
+model TradingPartner {
+  id                 String    @id @db.Uuid
+  orgId              String    @map("org_id") @db.Uuid
+  name               String
+  /// supplier | customer | both
+  kind               String
+  linkedOrgId        String?   @map("linked_org_id") @db.Uuid
+  email              String?
+  countryCode        String?   @map("country_code") @db.Char(2)
+  registrationNumber String?   @map("registration_number")
+  gln                String?
+  addressLine1       String?   @map("address_line1")
+  city               String?
+  postalCode         String?   @map("postal_code")
+  notes              String?
+  archivedAt         DateTime? @map("archived_at") @db.Timestamptz(3)
+  createdAt          DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt          DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  @@unique([orgId, linkedOrgId])
+  @@index([orgId, name])
+  @@map("trading_partner")
+}
+
+// ─── catalog (P3) ───────────────────────────────────────────────────────────
+
+/// Global units of measure (ADR 0006). Read-only for the app role.
+model Uom {
+  code            String           @id
+  name            String
+  /// mass | volume | count
+  dimension       String
+  /// Factor to the dimension's base unit (kg, l, unit).
+  toBase          Decimal          @map("to_base") @db.Decimal(24, 12)
+  productVersions ProductVersion[]
+
+  @@map("uom")
+}
+
+/// Stable product identity. Edits create a new ProductVersion; lots reference versions (P5).
+model Product {
+  id             String    @id @db.Uuid
+  orgId          String    @map("org_id") @db.Uuid
+  sku            String
+  /// GTIN of the current version, mirrored for uniqueness within the organisation.
+  gtin           String?
+  currentVersion Int       @map("current_version")
+  archivedAt     DateTime? @map("archived_at") @db.Timestamptz(3)
+  createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  versions ProductVersion[]
+
+  @@unique([orgId, sku])
+  @@unique([orgId, gtin])
+  @@map("product")
+}
+
+/// Immutable snapshot of a product's definition (append-only, ADR 0007).
+model ProductVersion {
+  id                String   @id @db.Uuid
+  orgId             String   @map("org_id") @db.Uuid
+  productId         String   @map("product_id") @db.Uuid
+  version           Int
+  name              String
+  /// olives | olive_oil_bulk | olive_oil_packaged | olive_pomace | other
+  category          String
+  uomCode           String   @map("uom_code")
+  description       String?
+  gtin              String?
+  originCountry     String?  @map("origin_country") @db.Char(2)
+  originRegion      String?  @map("origin_region")
+  /// EU Annex II allergen codes, e.g. "nuts"
+  allergens         String[]
+  storageConditions String?  @map("storage_conditions")
+  shelfLifeDays     Int?     @map("shelf_life_days")
+  /// Category-specific attributes validated by a versioned schema in @casitrace/contracts.
+  attributes        Json
+  attributesSchema  String   @map("attributes_schema")
+  changeNote        String?  @map("change_note")
+  createdById       String?  @map("created_by_id") @db.Uuid
+  createdAt         DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  product     Product                 @relation(fields: [productId], references: [id], onDelete: Restrict)
+  uom         Uom                     @relation(fields: [uomCode], references: [code])
+  components  ProductComponent[]
+  conversions ProductUnitConversion[]
+
+  @@unique([productId, version])
+  @@index([orgId, category])
+  @@map("product_version")
+}
+
+/// Composition of a product version: another product (e.g. bulk oil in a bottle) or a named ingredient.
+model ProductComponent {
+  id                 String   @id @db.Uuid
+  orgId              String   @map("org_id") @db.Uuid
+  productVersionId   String   @map("product_version_id") @db.Uuid
+  ordinal            Int
+  componentProductId String?  @map("component_product_id") @db.Uuid
+  name               String
+  percentage         Decimal? @db.Decimal(7, 4)
+
+  productVersion ProductVersion @relation(fields: [productVersionId], references: [id], onDelete: Restrict)
+
+  @@unique([productVersionId, ordinal])
+  @@map("product_component")
+}
+
+/// Product-specific conversion between units, e.g. 1 unit (bottle) = 0.75 l, 1 l = 0.916 kg.
+model ProductUnitConversion {
+  id               String  @id @db.Uuid
+  orgId            String  @map("org_id") @db.Uuid
+  productVersionId String  @map("product_version_id") @db.Uuid
+  fromUom          String  @map("from_uom")
+  toUom            String  @map("to_uom")
+  factor           Decimal @db.Decimal(24, 12)
+
+  productVersion ProductVersion @relation(fields: [productVersionId], references: [id], onDelete: Restrict)
+
+  @@unique([productVersionId, fromUom, toUom])
+  @@map("product_unit_conversion")
 }

@@ -10,6 +10,10 @@ import { defaultStatements } from "better-auth/plugins/organization/access";
 export const statements = {
   ...defaultStatements,
   audit: ["read"],
+  location: ["create", "update", "archive"],
+  partner: ["create", "update", "archive"],
+  product: ["create", "update", "archive"],
+  import: ["run"],
 } as const;
 
 export const ac = createAccessControl(statements);
@@ -23,14 +27,28 @@ export const roles = {
     member: ["create", "update", "delete"],
     invitation: ["create", "cancel"],
     audit: ["read"],
+    location: ["create", "update", "archive"],
+    partner: ["create", "update", "archive"],
+    product: ["create", "update", "archive"],
+    import: ["run"],
   }),
   admin: ac.newRole({
     organization: ["update"],
     member: ["create", "update", "delete"],
     invitation: ["create", "cancel"],
     audit: ["read"],
+    location: ["create", "update", "archive"],
+    partner: ["create", "update", "archive"],
+    product: ["create", "update", "archive"],
+    import: ["run"],
   }),
-  operator: ac.newRole({}),
+  // Operators maintain master data and capture events; they cannot archive or manage people.
+  operator: ac.newRole({
+    location: ["create", "update"],
+    partner: ["create", "update"],
+    product: ["create", "update"],
+    import: ["run"],
+  }),
   reviewer: ac.newRole({}),
   viewer: ac.newRole({}),
 } satisfies Record<RoleName, unknown>;

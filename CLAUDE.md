@@ -41,7 +41,7 @@ Casitrace is a food traceability and evidence platform. The plan is `roadmap-v2.
 3. **Tenant isolation** (ADR 0008):
    - Every tenant-owned table has `org_id`, `ENABLE ROW LEVEL SECURITY` and policies using `casitrace_current_org()` (copy the `audit_log` policies in the `identity_access` migration).
    - Read tenant data only inside `withTenant(db, orgId, …)` or `runCommand` (which scopes by `ctx.orgId`). Cross-org staff reads use `withPlatformAccess` and must write an audit record.
-   - Every `/api/v1` route is built with `createRoute(withAccess(deps, access, {...}))`. Organisation routes live under `/orgs/{orgId}` and use `{ kind: "org", permission }`. The isolation suite (`apps/api/tests/isolation.test.ts`) reads `x-access` from the OpenAPI document and attacks every route; new path parameters must be added to its `KNOWN_PARAMS`.
+   - Every `/api/v1` route is built with `createRoute(withAccess(deps, access, {...}))`. Organisation routes live under `/orgs/{orgId}` and use `{ kind: "org", permission }`. The isolation suite (`apps/api/tests/isolation.test.ts`) reads `x-access` from the OpenAPI document and attacks every route; new path parameters must be added to its `PARAM_VALUES`.
    - New permissions go in `packages/contracts/src/permissions.ts` (`statements` + role templates); check them with `can(role, "resource:action")`.
 4. **Domain code is framework-free**: no Prisma, Hono, S3 or AI SDK imports in `domain/`. Use ports (see `ObjectStorage`).
 5. **Validate every input** with Zod via `@hono/zod-openapi` routes. Responses are explicit DTOs; never return Prisma models directly.
@@ -52,6 +52,16 @@ Casitrace is a food traceability and evidence platform. The plan is `roadmap-v2.
 10. **Outbox consumers are idempotent** on `eventId` (delivery is at-least-once).
 11. No mock data or fake integrations in production paths. No new dependency without a reason in the phase report.
 12. TypeScript strict; no `any`; no non-null assertions without a comment.
+
+## Master data (P3)
+
+- Contexts: `apps/api/src/modules/parties` (profile, verification, locations, partners) and `modules/catalog` (products, units). Pure rules live in `domain/` (geometry, product rules); `application/` uses `runCommand`/`withTenant`; `presentation/` holds routes.
+- Shared validation lives in `@casitrace/contracts` (`identifiers.ts`, `master-data.ts`) and is used by both API and web.
+- **Products are versioned**: never update a `product_version` row (trigger + revoke). Changes go through `reviseProductTx`, which creates version N+1, or does nothing when the definition is identical. Lots (P5) must reference `product_version.id`.
+- **Category attributes** are validated by `ATTRIBUTE_SCHEMAS` with a version label (e.g. `olive_oil_packaged@1`) stored on each version. To change a schema, add a new label; never edit a released one.
+- Units: global `uom` table (read-only for the app); cross-dimension conversions are per product version. A bottle's `unit → l` is derived from `netVolumeMl`.
+- Imports (`modules/imports/importers.ts`): preview and commit share `plan()`; commit is all-or-nothing and re-validates. New columns must be added to `COLUMNS` and `FIELD_TO_COLUMN`.
+- Unique-constraint errors from Prisma 7 adapters carry the index name under `meta.driverAdapterError`; use `isUniqueViolation` and inspect the whole `meta`.
 
 ## Auth (ADR 0009)
 
@@ -74,3 +84,6 @@ Casitrace is a food traceability and evidence platform. The plan is `roadmap-v2.
 - Bun installs per-workspace `node_modules`; run package CLIs (`prisma`, `playwright`) from their package folder or via the root scripts.
 - Bun loads `.env` from the current folder only; app scripts pass `--env-file=../../.env`.
 - Better Auth disables its origin/CSRF checks when `NODE_ENV=test`; our config sets them on explicitly. Keep it that way.
+- `AUTH_RATE_LIMIT=off` exists only for the Playwright-started API (many sign-ups from one IP); config refuses it in production.
+- Biome formats files: after a scripted text replacement, check it applied (`grep`), because formatting may have changed the target text. Its formatter can need two passes.
+- Playwright: wait for the new page's heading before typing after a navigation, or the input may land on the old page.

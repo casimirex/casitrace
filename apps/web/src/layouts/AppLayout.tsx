@@ -48,6 +48,11 @@ export function AppLayout() {
             <NavLink to="/account" className={navClass}>
               {me.data?.user.name ?? "Account"}
             </NavLink>
+            {me.data?.user.platformRole && (
+              <NavLink to="/platform/verifications" className={navClass}>
+                Verifications
+              </NavLink>
+            )}
             <NavLink to="/status" className={navClass}>
               Status
             </NavLink>

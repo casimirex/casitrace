@@ -1,0 +1,9 @@
+sku,name,category,uom,gtin,origin_country,origin_region,grade,cultivars,monovarietal,extraction_method,organic,net_volume_ml,container,units_per_case,intended_use,density_kg_per_l,shelf_life_days,storage,allergens,description
+OLV-COR,Coratina olives,olives,kg,,IT,Puglia,,Coratina,,,,,,,oil,,,"Deliver within 24 h of harvest",,"Fresh olives for milling"
+OLV-OGL,Ogliarola olives,olives,kg,,IT,Puglia,,Ogliarola Barese,,,,,,,oil,,,,,
+EVO-BULK-2026,Extra virgin olive oil bulk 2026,olive_oil_bulk,kg,,IT,Puglia,extra_virgin,Coratina|Ogliarola Barese,no,two_phase,no,,,,,0.916,540,"Stainless tank, 14-18 °C, nitrogen blanket",,"Harvest 2026/27 blend"
+EVO-COR-MONO,Coratina monovarietal bulk,olive_oil_bulk,kg,,IT,Puglia,extra_virgin,Coratina,yes,two_phase,yes,,,,,0.916,540,"Stainless tank, 14-18 °C",,
+EVO-500-GL,Extra virgin olive oil 500 ml glass,olive_oil_packaged,unit,8001234560010,IT,Puglia,extra_virgin,Coratina|Ogliarola Barese,,,no,500,glass,12,,0.916,540,"Cool, dark place",,"Dark glass bottle"
+EVO-750-GL,Extra virgin olive oil 750 ml glass,olive_oil_packaged,unit,8001234560027,IT,Puglia,extra_virgin,Coratina|Ogliarola Barese,,,no,750,glass,6,,0.916,540,"Cool, dark place",,
+EVO-5L-TIN,Extra virgin olive oil 5 l tin,olive_oil_packaged,unit,8001234560034,IT,Puglia,extra_virgin,Coratina|Ogliarola Barese,,,no,5000,tin,4,,0.916,540,"Cool, dark place",,"Catering tin"
+POMACE,Wet olive pomace,olive_pomace,kg,,IT,Puglia,,,,,,,,,,,,,,"By-product of two-phase extraction"

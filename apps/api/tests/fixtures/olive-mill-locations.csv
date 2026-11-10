@@ -1,0 +1,7 @@
+code,name,type,parent_code,gln,country,address_line1,city,postal_code,region,latitude,longitude,boundary_geojson
+FARM-MASSERIA,Masseria San Vito,farm,,,IT,Contrada San Vito,Andria,76123,Puglia,41.2310,16.2900,
+PLOT-SV-01,San Vito north grove,plot,FARM-MASSERIA,,IT,,,,,41.2335,16.2885,"{""type"":""Polygon"",""coordinates"":[[[16.2870,41.2330],[16.2900,41.2330],[16.2900,41.2345],[16.2870,41.2345],[16.2870,41.2330]]]}"
+PLOT-SV-02,San Vito south grove,plot,FARM-MASSERIA,,IT,,,,,41.2290,16.2905,"{""type"":""Polygon"",""coordinates"":[[[16.2890,41.2280],[16.2925,41.2280],[16.2925,41.2300],[16.2890,41.2300],[16.2890,41.2280]]]}"
+MILL-ANDRIA,Frantoio Andria,facility,,8001234000011,IT,Via dei Frantoi 12,Andria,76123,Puglia,41.2270,16.2950,
+TANK-01,Storage tank 1 (30 t),storage,MILL-ANDRIA,,IT,,,,,,,
+TANK-02,Storage tank 2 (30 t),storage,MILL-ANDRIA,,IT,,,,,,,

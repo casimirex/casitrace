@@ -2,11 +2,11 @@
 
 Phase 0 is not complete until these are done. Engineering (P1, P2) can proceed in parallel; P3 cannot start until items 1–2 are decided.
 
-- [ ] **Pilot commodity and chain** — record in `docs/adr/0001-pilot-commodity-and-chain.md`.
-- [ ] **Pilot jurisdiction** — record in `docs/adr/0002-pilot-jurisdiction.md`.
+- [x] **Pilot commodity and chain** — olive oil (ADR 0001).
+- [x] **Pilot jurisdiction** — EU, country to be chosen with design partners (ADR 0002).
 - [ ] **Design partners** — written intent (LOI or email) from ≥ 3 partners covering ≥ 2 chain steps. List them below.
 - [ ] **Process walkthroughs** — one recorded walkthrough per partner of their current process (paper, spreadsheets, systems).
-- [ ] **KDE/CTE matrix** — fill `kde-cte-matrix.md` for the chosen commodity and have ≥ 1 partner review it.
+- [ ] **KDE/CTE matrix** — drafted for olive oil in `kde-cte-matrix.md`; needs review by ≥ 1 partner.
 - [ ] **Regulatory fact sheet** — check every row in `docs/compliance/regulatory-facts.md` against the official source.
 
 ## Design partners

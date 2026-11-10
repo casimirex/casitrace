@@ -21,11 +21,15 @@ export const runCommand = async <R>(
   db: Db,
   ctx: CommandContext,
   handler: (tx: Tx) => Promise<CommandOutcome<R>>,
+  options: { timeoutMs?: number } = {},
 ): Promise<R> =>
-  db.$transaction(async (tx) => {
-    if (ctx.orgId) await tx.$executeRaw`SELECT set_config('app.org_id', ${ctx.orgId}, true)`;
-    const outcome = await handler(tx);
-    await writeAudit(tx, ctx, outcome.audit);
-    await enqueueEvents(tx, ctx.orgId, outcome.events ?? []);
-    return outcome.result;
-  });
+  db.$transaction(
+    async (tx) => {
+      if (ctx.orgId) await tx.$executeRaw`SELECT set_config('app.org_id', ${ctx.orgId}, true)`;
+      const outcome = await handler(tx);
+      await writeAudit(tx, ctx, outcome.audit);
+      await enqueueEvents(tx, ctx.orgId, outcome.events ?? []);
+      return outcome.result;
+    },
+    { timeout: options.timeoutMs ?? 10_000, maxWait: 5_000 },
+  );

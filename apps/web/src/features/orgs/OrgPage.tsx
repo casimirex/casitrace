@@ -2,7 +2,7 @@ import { ROLE_NAMES } from "@casitrace/contracts";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { type FormEvent, useState } from "react";
 import { useParams } from "react-router";
-import { Alert, Button, Card, Field, PageTitle, RoleBadge, SelectField } from "../../components/ui";
+import { Alert, Button, Card, Field, RoleBadge, SelectField } from "../../components/ui";
 import { api, unwrap } from "../../lib/api";
 import { authClient, errorMessage } from "../../lib/auth";
 import { useOrg } from "./queries";
@@ -161,19 +161,9 @@ export function OrgPage() {
   if (org.isError) return <Alert>{org.error.message}</Alert>;
   const perms = new Set(org.data.myPermissions);
   return (
-    <>
-      <PageTitle
-        title={org.data.name}
-        subtitle={
-          <>
-            Your role: <RoleBadge role={org.data.myRole} />
-          </>
-        }
-      />
-      <div className="grid gap-6 lg:grid-cols-2">
-        <Members orgId={orgId} canManage={perms.has("invitation:create")} />
-        {perms.has("audit:read") && <AuditLog orgId={orgId} />}
-      </div>
-    </>
+    <div className="grid gap-6 lg:grid-cols-2">
+      <Members orgId={orgId} canManage={perms.has("invitation:create")} />
+      {perms.has("audit:read") && <AuditLog orgId={orgId} />}
+    </div>
   );
 }

@@ -33,6 +33,7 @@ for (const ownerUrl of [devOwner, testOwner]) {
   const dbName = new URL(ownerUrl).pathname.slice(1);
   await db.unsafe(`ALTER ROLE casitrace_app LOGIN PASSWORD '${appPassword.replaceAll("'", "''")}'`);
   await db.unsafe(`GRANT CONNECT, CREATE ON DATABASE "${dbName}" TO casitrace_app`);
+  await db.unsafe("REVOKE ALL ON _prisma_migrations FROM casitrace_app");
   // pg-boss creates and owns its schema; drop a copy created earlier by another role (dev/test only).
   const [boss] =
     await db`SELECT pg_get_userbyid(nspowner) AS owner FROM pg_namespace WHERE nspname = 'pgboss'`;

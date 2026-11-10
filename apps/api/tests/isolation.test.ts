@@ -20,7 +20,18 @@ interface Operation {
 }
 
 const ACCESS_FORMAT = /^(public|user|org(:[a-z]+:[a-z]+)?|platform:[a-z_|]+)$/;
-const KNOWN_PARAMS = new Set(["orgId"]);
+/** Values used for path parameters. orgId is the organisation under attack; others are plausible but random. */
+const PARAM_VALUES: Record<string, (orgId: string) => string> = {
+  orgId: (orgId) => orgId,
+  organizationId: (orgId) => orgId,
+  locationId: () => newId(),
+  partnerId: () => newId(),
+  productId: () => newId(),
+  version: () => "1",
+  kind: () => "products",
+};
+/** Operations whose only path parameters are these can be called successfully by a member. */
+const LISTING_PARAMS = new Set(["orgId", "kind"]);
 
 const operations = async (): Promise<Operation[]> => {
   const doc = (await (await app.request("/api/openapi.json")).json()) as {
@@ -39,15 +50,17 @@ const operations = async (): Promise<Operation[]> => {
 
 const fill = (path: string, orgId: string) =>
   path.replace(/\{(\w+)\}/g, (_, name: string) => {
-    if (!KNOWN_PARAMS.has(name))
-      throw new Error(`isolation suite does not know path parameter {${name}}; add it`);
-    return orgId;
+    const value = PARAM_VALUES[name];
+    if (!value)
+      throw new Error(`isolation suite does not know path parameter {${name}}; add it to PARAM_VALUES`);
+    return value(orgId);
   });
 
 const send = (c: Client | null, op: Operation, orgId: string) => {
   const body = op.method === "GET" || op.method === "DELETE" ? undefined : {};
   const path = fill(op.path, orgId);
-  return c ? c.call(op.method, path, body) : app.request(path, { method: op.method });
+  // Anonymous requests look like a browser on the web origin, so they pass CSRF and reach the auth check.
+  return c ? c.call(op.method, path, body) : client(app).call(op.method, path, body);
 };
 
 let ops: Operation[] = [];
@@ -108,7 +121,14 @@ describe("cross-tenant access", () => {
   });
 
   test("the owner of each organisation can use its routes (the guard is not just denying everyone)", async () => {
-    for (const o of ops.filter((x) => x.access?.startsWith("org") && x.method === "GET")) {
+    const listings = ops.filter(
+      (x) =>
+        x.access?.startsWith("org") &&
+        x.method === "GET" &&
+        [...x.path.matchAll(/\{(\w+)\}/g)].every((m) => LISTING_PARAMS.has(m[1] ?? "")),
+    );
+    expect(listings.length).toBeGreaterThan(3);
+    for (const o of listings) {
       expect((await send(alice.client, o, orgA)).status).toBe(200);
       expect((await send(bob.client, o, orgB)).status).toBe(200);
     }
@@ -193,7 +213,7 @@ describe("platform routes", () => {
 
   test("platform staff without two-factor get 403 MFA_REQUIRED; with it, access works", async () => {
     const staff = await verifiedUser(app, "staff");
-    await db.user.update({ where: { id: staff.userId }, data: { platformRole: "support" } });
+    await db.user.update({ where: { id: staff.userId }, data: { platformRole: "super_admin" } });
     for (const o of platformOps()) {
       const res = await send(staff.client, o, orgA);
       expect(res.status).toBe(403);
@@ -203,7 +223,22 @@ describe("platform routes", () => {
     const enable = await staff.client.call("POST", "/api/v1/auth/two-factor/enable", { password: PASSWORD });
     const totp = totpFor(((await enable.json()) as { totpURI: string }).totpURI);
     await staff.client.call("POST", "/api/v1/auth/two-factor/verify-totp", { code: totp.generate() });
-    for (const o of platformOps()) expect((await send(staff.client, o, orgA)).status).toBe(200);
+    for (const o of platformOps().filter((x) => x.method === "GET")) {
+      expect((await send(staff.client, o, orgA)).status).toBe(200);
+    }
+  });
+
+  test("support staff cannot use super-admin-only routes", async () => {
+    const support = await verifiedUser(app, "support");
+    await db.user.update({ where: { id: support.userId }, data: { platformRole: "support" } });
+    const enable = await support.client.call("POST", "/api/v1/auth/two-factor/enable", {
+      password: PASSWORD,
+    });
+    const totp = totpFor(((await enable.json()) as { totpURI: string }).totpURI);
+    await support.client.call("POST", "/api/v1/auth/two-factor/verify-totp", { code: totp.generate() });
+    for (const o of platformOps().filter((x) => x.access === "platform:super_admin")) {
+      expect((await send(support.client, o, orgA)).status).toBe(404);
+    }
   });
 
   test("a user cannot grant themselves a platform role", async () => {

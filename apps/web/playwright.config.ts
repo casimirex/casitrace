@@ -11,7 +11,8 @@ export default defineConfig({
   projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
   webServer: [
     {
-      command: "bun --cwd ../api --env-file=../../.env src/main.ts",
+      // Rate limiting is covered by API tests; the browser suite creates many accounts from one IP.
+      command: "AUTH_RATE_LIMIT=off bun --cwd ../api --env-file=../../.env src/main.ts",
       url: "http://localhost:3000/api/health",
       reuseExistingServer: !process.env.CI,
       timeout: 60_000,

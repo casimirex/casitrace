@@ -8,7 +8,9 @@ import type { AppEnv, Deps } from "./context";
 import { fromZodError, onError, onNotFound } from "./middleware/errors";
 import { requestContext } from "./middleware/request-context";
 import { accessRoutes } from "./modules/access/routes";
+import { catalogRoutes } from "./modules/catalog/presentation/routes";
 import { AUTH_BASE_PATH } from "./modules/identity/auth";
+import { partiesRoutes } from "./modules/parties/presentation/routes";
 import { systemRoutes } from "./modules/system/routes";
 
 export const API_INFO: {
@@ -50,6 +52,8 @@ export const createApp = (deps: Deps) => {
     }),
   );
   v1.route("/", accessRoutes(deps));
+  v1.route("/", partiesRoutes(deps));
+  v1.route("/", catalogRoutes(deps));
 
   const api = newRouter();
   api.route("/", systemRoutes(deps));
