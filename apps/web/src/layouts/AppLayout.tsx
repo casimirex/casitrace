@@ -1,5 +1,6 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { NavLink, Outlet, useMatch, useNavigate } from "react-router";
+import { useNotifications } from "../features/notifications/NotificationsPage";
 import { useMe } from "../features/orgs/queries";
 import { authClient } from "../lib/auth";
 
@@ -8,6 +9,8 @@ const navClass = ({ isActive }: { isActive: boolean }) =>
 
 export function AppLayout() {
   const me = useMe();
+  const notifications = useNotifications();
+  const unread = notifications.data?.unread ?? 0;
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const orgMatch = useMatch("/orgs/:orgId/*");
@@ -45,6 +48,17 @@ export function AppLayout() {
             </label>
           )}
           <nav aria-label="Main" className="ml-auto flex items-center gap-4 text-sm">
+            <NavLink to="/notifications" className={navClass} aria-label={`Notifications, ${unread} unread`}>
+              Notifications
+              {unread > 0 && (
+                <span
+                  className="ml-1.5 rounded-full bg-brand px-1.5 py-0.5 text-xs tabular-nums text-canvas"
+                  data-testid="unread-count"
+                >
+                  {unread}
+                </span>
+              )}
+            </NavLink>
             <NavLink to="/account" className={navClass}>
               {me.data?.user.name ?? "Account"}
             </NavLink>

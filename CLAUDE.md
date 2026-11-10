@@ -13,7 +13,7 @@ Casitrace is a food traceability and evidence platform. The plan is `roadmap-v2.
 
 | Task | Command |
 |---|---|
-| Start services | `docker compose up -d --wait && docker compose up s3-init` |
+| Start services | `docker compose up -d --wait && docker compose up s3-init` (first ClamAV start takes 1–2 min) |
 | Install (also generates Prisma client) | `bun install` |
 | Database setup (migrations, runtime role login, test DB) | `bun run db:setup` |
 | Run API + worker + web | `bun run dev` (open :5173; API under :5173/api, docs at /api/docs; mail at :8025) |
@@ -62,6 +62,17 @@ Casitrace is a food traceability and evidence platform. The plan is `roadmap-v2.
 - Units: global `uom` table (read-only for the app); cross-dimension conversions are per product version. A bottle's `unit → l` is derived from `netVolumeMl`.
 - Imports (`modules/imports/importers.ts`): preview and commit share `plan()`; commit is all-or-nothing and re-validates. New columns must be added to `COLUMNS` and `FIELD_TO_COLUMN`.
 - Unique-constraint errors from Prisma 7 adapters carry the index name under `meta.driverAdapterError`; use `isUniqueViolation` and inspect the whole `meta`.
+
+## Evidence (P4)
+
+- Module `apps/api/src/modules/evidence`; worker side in `apps/worker/src/evidence` (ClamAV scan, expiry job).
+- Upload path: size limit (25 MB) → type sniffed from bytes (`domain/file-type.ts`, allow-list) → SHA-256 → object stored → DB rows + `evidence.file_uploaded` outbox event → worker re-hashes, scans with clamd, moves `submitted → checked` or `rejected` (and deletes infected objects).
+- Status changes only through `domain/review.ts` rules and always write an `evidence_status_change` row. Verification needs `evidence:verify` and a different person from the uploader of the current file.
+- Downloads: only `scanStatus = clean`, via 5-minute presigned links; every download and integrity check is audited. Never return storage keys in API responses.
+- `evidence_file` rows are immutable except scan columns (trigger); status history is append-only.
+- Notifications are per user (filter by `user_id`; no tenant RLS); use a `dedupeKey` for anything a job may repeat.
+- Worker jobs that span organisations set `app.platform_access` and must keep writes inside the event's `org_id`.
+- Integration tests call the worker's scan handler directly against the real ClamAV (`docker compose` service `clamav`).
 
 ## Auth (ADR 0009)
 

@@ -16,7 +16,7 @@ Food traceability and evidence platform: trace any lot upstream and downstream a
 
 ```sh
 cp .env.example .env
-docker compose up -d --wait && docker compose up s3-init
+docker compose up -d --wait && docker compose up s3-init   # first start: ClamAV needs 1-2 min
 bun install
 bun run db:setup
 bun run dev

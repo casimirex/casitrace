@@ -6,6 +6,11 @@ export type EmailRequest =
       template: "invitation";
       to: string;
       data: { organisationName: string; inviterName: string; role: string; url: string };
+    }
+  | {
+      template: "evidence-expiry";
+      to: string;
+      data: { name: string; title: string; organisationName: string; days: string; url: string };
     };
 
 export interface RenderedEmail {
@@ -70,6 +75,22 @@ export const render = (req: EmailRequest): RenderedEmail => {
           ],
           { label: "View invitation", url },
           "The invitation expires in 7 days.",
+        ),
+      };
+    }
+    case "evidence-expiry": {
+      const { name, title, organisationName, days, url } = req.data;
+      const expired = days === "expired";
+      const what = expired ? "has expired" : days === "0" ? "expires today" : `expires in ${days} days`;
+      return {
+        subject: expired ? `Certificate expired: ${title}` : `Certificate ${what}: ${title}`,
+        text: `Hi ${name},\n\n"${title}" for ${organisationName} ${what}. Upload the renewed certificate:\n${url}`,
+        html: layout(
+          [`Hi ${esc(name)},`, `<strong>${esc(title)}</strong> for ${esc(organisationName)} ${what}.`],
+          { label: "Open the certificate", url },
+          expired
+            ? "Expired certificates no longer count as valid evidence."
+            : "Upload the renewed certificate before it expires.",
         ),
       };
     }

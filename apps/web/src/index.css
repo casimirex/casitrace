@@ -9,6 +9,7 @@
   --color-brand: #1d6b51;
   --color-ok: #1d6b51;
   --color-fail: #b42318;
+  --color-warn: #a15c00;
   --font-sans: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
 }
@@ -23,6 +24,7 @@
     --color-brand: #5cc39a;
     --color-ok: #5cc39a;
     --color-fail: #f97066;
+    --color-warn: #f0a84a;
     color-scheme: dark;
   }
 }

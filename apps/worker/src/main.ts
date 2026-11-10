@@ -1,9 +1,13 @@
 import { createDb } from "@casitrace/db";
+import { createS3Storage } from "@casitrace/shared";
 import pino from "pino";
 import { bossSink, createBoss, ensureQueues, startConsumers } from "./boss";
 import { createEmailHandler } from "./email/sender";
 import { loadWorkerEnv } from "./env";
 import { EventRegistry } from "./events";
+import { createClamavScanner } from "./evidence/clamav";
+import { runExpiryCheck } from "./evidence/expiry";
+import { createScanHandler } from "./evidence/scan-handler";
 import { relayOutboxBatch } from "./outbox-relay";
 
 const env = loadWorkerEnv();
@@ -12,7 +16,16 @@ const db = createDb({ url: env.DATABASE_URL, max: 5 });
 const boss = createBoss(env.DATABASE_URL);
 boss.on("error", (err) => logger.error({ err }, "pg-boss error"));
 
-const registry = new EventRegistry().on(
+const storage = createS3Storage({
+  endpoint: env.S3_ENDPOINT,
+  region: env.S3_REGION,
+  bucket: env.S3_BUCKET,
+  accessKeyId: env.S3_ACCESS_KEY_ID,
+  secretAccessKey: env.S3_SECRET_ACCESS_KEY,
+});
+const scanner = createClamavScanner(env.CLAMAV_HOST, env.CLAMAV_PORT);
+
+const registry = new EventRegistry().on("evidence.file_uploaded", createScanHandler(db, storage, scanner)).on(
   "email.requested",
   createEmailHandler(
     {
@@ -28,6 +41,15 @@ const registry = new EventRegistry().on(
 await boss.start();
 await ensureQueues(boss);
 await startConsumers(boss, registry);
+
+// Daily certificate expiry check (warnings at 30/7/0 days; expire after the end date).
+const EXPIRY_QUEUE = "evidence-expiry-check";
+await boss.createQueue(EXPIRY_QUEUE);
+await boss.schedule(EXPIRY_QUEUE, env.EXPIRY_CRON, null, { tz: "UTC" });
+await boss.work(EXPIRY_QUEUE, async () => {
+  const r = await runExpiryCheck(db, new Date(), env.WEB_ORIGIN);
+  logger.info(r, "evidence expiry check");
+});
 logger.info("worker started");
 
 let running = true;

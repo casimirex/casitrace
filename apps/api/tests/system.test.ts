@@ -1,5 +1,5 @@
 import { afterAll, describe, expect, test } from "bun:test";
-import type { ObjectStorage } from "../src/infrastructure/storage";
+import type { ObjectStorage } from "@casitrace/shared";
 import { buildApp, db, storage } from "./helpers";
 
 afterAll(() => db.$disconnect());

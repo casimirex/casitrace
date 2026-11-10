@@ -1,9 +1,9 @@
 import { createDb } from "@casitrace/db";
+import { createS3Storage } from "@casitrace/shared";
 import pkg from "../package.json" with { type: "json" };
 import { createApp } from "./app";
 import { loadEnv } from "./config/env";
 import { createLogger } from "./infrastructure/logger";
-import { createS3Storage } from "./infrastructure/storage";
 import { createAuth } from "./modules/identity/auth";
 
 const env = loadEnv();

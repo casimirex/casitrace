@@ -15,7 +15,8 @@
     "nodemailer": "10.2.1",
     "pg-boss": "12.38.0",
     "pino": "10.4.0",
-    "zod": "4.6.7"
+    "zod": "4.6.7",
+    "@casitrace/contracts": "workspace:*"
   },
   "devDependencies": {
     "@types/nodemailer": "8.0.2"

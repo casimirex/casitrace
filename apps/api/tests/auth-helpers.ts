@@ -28,11 +28,14 @@ export const client = (app: TestApp, ip = randomIp()): Client => {
         headers: {
           origin: env.WEB_ORIGIN,
           "x-forwarded-for": ip,
-          ...(body !== undefined ? { "content-type": "application/json" } : {}),
+          // FormData sets its own multipart boundary header.
+          ...(body !== undefined && !(body instanceof FormData)
+            ? { "content-type": "application/json" }
+            : {}),
           ...(cookies.size ? { cookie: self.cookieHeader() } : {}),
           ...headers,
         },
-        ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
+        ...(body !== undefined ? { body: body instanceof FormData ? body : JSON.stringify(body) } : {}),
       });
       for (const c of res.headers.getSetCookie()) {
         const [pair] = c.split(";");

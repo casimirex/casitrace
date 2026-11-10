@@ -55,6 +55,7 @@
       "name": "@casitrace/worker",
       "version": "0.0.0",
       "dependencies": {
+        "@casitrace/contracts": "workspace:*",
         "@casitrace/db": "workspace:*",
         "@casitrace/shared": "workspace:*",
         "nodemailer": "10.2.1",

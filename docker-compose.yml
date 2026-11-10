@@ -44,10 +44,24 @@ services:
         done
         echo "s3.bucket.list" | weed shell -master=s3:9333
 
+  # Malware scanning for uploaded evidence (P4). First start downloads signatures (~1-2 min).
+  clamav:
+    image: clamav/clamav:1.4.3
+    ports: ["3310:3310"]
+    volumes:
+      - clamdb:/var/lib/clamav
+    healthcheck:
+      test: ["CMD-SHELL", "clamdscan --ping 1 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 120s
+
   mailpit:
     image: axllent/mailpit:v1.27.0
     ports: ["1025:1025", "8025:8025"]
 
 volumes:
+  clamdb:
   pgdata:
   s3data:

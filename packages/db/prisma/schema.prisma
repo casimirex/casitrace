@@ -63,11 +63,12 @@ model User {
   createdAt        DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt        DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
 
-  sessions    Session[]
-  accounts    Account[]
-  memberships Member[]
-  invitations Invitation[]
-  twoFactors  TwoFactor[]
+  sessions      Session[]
+  accounts      Account[]
+  memberships   Member[]
+  invitations   Invitation[]
+  twoFactors    TwoFactor[]
+  notifications Notification[]
 
   @@map("user")
 }
@@ -396,4 +397,127 @@ model ProductUnitConversion {
 
   @@unique([productVersionId, fromUom, toUom])
   @@map("product_unit_conversion")
+}
+
+// ─── evidence (P4) ──────────────────────────────────────────────────────────
+// A hash proves a file is unchanged since upload, not that it is true (roadmap-v2 §4.4).
+
+/// A piece of evidence: a document or photo, optionally a certificate with structured fields.
+model Evidence {
+  id                 String    @id @db.Uuid
+  orgId              String    @map("org_id") @db.Uuid
+  /// certificate | lab_report | inspection_report | supplier_declaration | delivery_note | photo | other
+  type               String
+  title              String
+  description        String?
+  /// submitted | checked | verified | rejected | expired | revoked
+  status             String    @default("submitted")
+  currentFileVersion Int       @map("current_file_version")
+  // Certificate fields (type = certificate)
+  scheme             String?
+  issuerName         String?   @map("issuer_name")
+  issuerPartnerId    String?   @map("issuer_partner_id") @db.Uuid
+  certificateNumber  String?   @map("certificate_number")
+  scope              String?
+  validFrom          DateTime? @map("valid_from") @db.Date
+  validUntil         DateTime? @map("valid_until") @db.Date
+  /// Smallest expiry warning already sent (30, 7 or 0 days), so the job never repeats one.
+  expiryNoticeDays   Int?      @map("expiry_notice_days")
+  createdById        String?   @map("created_by_id") @db.Uuid
+  createdAt          DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt          DateTime  @updatedAt @map("updated_at") @db.Timestamptz(3)
+
+  files   EvidenceFile[]
+  links   EvidenceLink[]
+  changes EvidenceStatusChange[]
+
+  @@index([orgId, status])
+  @@index([orgId, type])
+  @@index([validUntil])
+  @@map("evidence")
+}
+
+/// One uploaded file version. Immutable except for the scan result columns (trigger-enforced).
+model EvidenceFile {
+  id           String    @id @db.Uuid
+  orgId        String    @map("org_id") @db.Uuid
+  evidenceId   String    @map("evidence_id") @db.Uuid
+  version      Int
+  storageKey   String    @unique @map("storage_key")
+  sha256       String    @db.Char(64)
+  sizeBytes    Int       @map("size_bytes")
+  /// Sniffed from the file content, not taken from the client.
+  mediaType    String    @map("media_type")
+  originalName String    @map("original_name")
+  uploadedById String?   @map("uploaded_by_id") @db.Uuid
+  uploadedAt   DateTime  @default(now()) @map("uploaded_at") @db.Timestamptz(3)
+  /// pending | clean | infected | error
+  scanStatus   String    @default("pending") @map("scan_status")
+  scanDetail   String?   @map("scan_detail")
+  scannedAt    DateTime? @map("scanned_at") @db.Timestamptz(3)
+
+  evidence Evidence @relation(fields: [evidenceId], references: [id], onDelete: Restrict)
+
+  @@unique([evidenceId, version])
+  @@index([sha256])
+  @@map("evidence_file")
+}
+
+/// What a piece of evidence supports. target_type: organisation | location | partner | product | product_version | lot | event
+model EvidenceLink {
+  id          String   @id @db.Uuid
+  orgId       String   @map("org_id") @db.Uuid
+  evidenceId  String   @map("evidence_id") @db.Uuid
+  targetType  String   @map("target_type")
+  targetId    String   @map("target_id") @db.Uuid
+  createdById String?  @map("created_by_id") @db.Uuid
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  evidence Evidence @relation(fields: [evidenceId], references: [id], onDelete: Restrict)
+
+  @@unique([evidenceId, targetType, targetId])
+  @@index([orgId, targetType, targetId])
+  @@map("evidence_link")
+}
+
+/// Every status transition with who, when and why (append-only).
+model EvidenceStatusChange {
+  id          String   @id @db.Uuid
+  orgId       String   @map("org_id") @db.Uuid
+  evidenceId  String   @map("evidence_id") @db.Uuid
+  fromStatus  String?  @map("from_status")
+  toStatus    String   @map("to_status")
+  reason      String?
+  actorType   String   @map("actor_type")
+  actorId     String?  @map("actor_id") @db.Uuid
+  fileVersion Int?     @map("file_version")
+  occurredAt  DateTime @default(now()) @map("occurred_at") @db.Timestamptz(3)
+
+  evidence Evidence @relation(fields: [evidenceId], references: [id], onDelete: Restrict)
+
+  @@index([evidenceId, occurredAt])
+  @@map("evidence_status_change")
+}
+
+// ─── notifications (P4) ─────────────────────────────────────────────────────
+
+/// In-app notification for one user. Owned by the user (filtered by user_id), not under tenant RLS.
+model Notification {
+  id        String    @id @db.Uuid
+  userId    String    @map("user_id") @db.Uuid
+  orgId     String?   @map("org_id") @db.Uuid
+  kind      String
+  title     String
+  body      String
+  link      String?
+  /// Dedupe key, e.g. "evidence-expiry:<id>:7"; one notification per user per key.
+  dedupeKey String?   @map("dedupe_key")
+  readAt    DateTime? @map("read_at") @db.Timestamptz(3)
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, dedupeKey])
+  @@index([userId, readAt, createdAt])
+  @@map("notification")
 }

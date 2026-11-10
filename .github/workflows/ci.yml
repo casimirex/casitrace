@@ -24,7 +24,8 @@ jobs:
         run: cp .env.example .env
 
       - name: Start services (Postgres, S3, Mailpit)
-        run: docker compose up -d --wait postgres s3 mailpit && docker compose up s3-init
+        # ClamAV downloads signatures on first start (1-2 min).
+        run: docker compose up -d --wait postgres s3 mailpit clamav && docker compose up s3-init
 
       - name: Install dependencies (also generates the Prisma client)
         run: bun install --frozen-lockfile

@@ -1,6 +1,6 @@
 import type { Db } from "@casitrace/db";
+import type { ObjectStorage } from "@casitrace/shared";
 import type { Logger } from "./infrastructure/logger";
-import type { ObjectStorage } from "./infrastructure/storage";
 import type { Auth } from "./modules/identity/auth";
 
 /** Process-wide dependencies, created once in main.ts (or in tests) and injected into the app. */

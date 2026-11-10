@@ -1,10 +1,10 @@
 // Writes the OpenAPI document to packages/api-client/openapi.json without touching the network.
 import path from "node:path";
 import type { Db } from "@casitrace/db";
+import type { ObjectStorage } from "@casitrace/shared";
 import pino from "pino";
 import { API_INFO, createApp } from "../src/app";
 import type { Deps } from "../src/context";
-import type { ObjectStorage } from "../src/infrastructure/storage";
 
 const unused = new Proxy(
   {},

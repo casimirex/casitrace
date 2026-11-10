@@ -10,6 +10,8 @@ export interface ObjectStorage {
     key: string,
     opts: { method: "GET" | "PUT"; expiresInSeconds: number; contentType?: string },
   ): string;
+  /** Reads a whole object (evidence files are size-limited). */
+  read(key: string): Promise<Uint8Array>;
   /** Verifies the bucket is reachable and writable. */
   check(): Promise<void>;
 }
@@ -38,6 +40,7 @@ export const createS3Storage = (cfg: S3Config): ObjectStorage => {
       await client.write(key, body, contentType ? { type: contentType } : undefined);
     },
     exists: (key) => client.exists(key),
+    read: async (key) => new Uint8Array(await client.file(key).arrayBuffer()),
     async delete(key) {
       await client.delete(key);
     },

@@ -14,6 +14,7 @@ export const statements = {
   partner: ["create", "update", "archive"],
   product: ["create", "update", "archive"],
   import: ["run"],
+  evidence: ["create", "update", "verify"],
 } as const;
 
 export const ac = createAccessControl(statements);
@@ -31,6 +32,7 @@ export const roles = {
     partner: ["create", "update", "archive"],
     product: ["create", "update", "archive"],
     import: ["run"],
+    evidence: ["create", "update", "verify"],
   }),
   admin: ac.newRole({
     organization: ["update"],
@@ -41,6 +43,7 @@ export const roles = {
     partner: ["create", "update", "archive"],
     product: ["create", "update", "archive"],
     import: ["run"],
+    evidence: ["create", "update", "verify"],
   }),
   // Operators maintain master data and capture events; they cannot archive or manage people.
   operator: ac.newRole({
@@ -48,8 +51,12 @@ export const roles = {
     partner: ["create", "update"],
     product: ["create", "update"],
     import: ["run"],
+    evidence: ["create", "update"],
   }),
-  reviewer: ac.newRole({}),
+  // Reviewers (quality staff) handle evidence and decide whether it is verified.
+  reviewer: ac.newRole({
+    evidence: ["create", "update", "verify"],
+  }),
   viewer: ac.newRole({}),
 } satisfies Record<RoleName, unknown>;
 

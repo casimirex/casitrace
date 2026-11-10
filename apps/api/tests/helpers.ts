@@ -1,9 +1,9 @@
 import { createDb, type Db } from "@casitrace/db";
+import { createS3Storage, type ObjectStorage } from "@casitrace/shared";
 import pino from "pino";
 import { createApp } from "../src/app";
 import { loadEnv } from "../src/config/env";
 import type { Deps } from "../src/context";
-import { createS3Storage, type ObjectStorage } from "../src/infrastructure/storage";
 import { createAuth } from "../src/modules/identity/auth";
 
 if (process.env.NODE_ENV !== "test" || !process.env.DATABASE_URL?.includes("_test")) {

@@ -5,11 +5,14 @@ import { ForgotPasswordPage, ResetPasswordPage } from "../features/auth/Password
 import { RequireAuth } from "../features/auth/RequireAuth";
 import { SignInPage, TwoFactorPage } from "../features/auth/SignInPage";
 import { SignUpPage } from "../features/auth/SignUpPage";
+import { EvidenceDetailPage } from "../features/evidence/EvidenceDetailPage";
+import { EvidencePage } from "../features/evidence/EvidencePage";
 import { ImportPage } from "../features/masterdata/ImportPage";
 import { LocationsPage } from "../features/masterdata/LocationsPage";
 import { PartnersPage } from "../features/masterdata/PartnersPage";
 import { ProductDetailPage, ProductsPage } from "../features/masterdata/ProductsPage";
 import { ProfilePage } from "../features/masterdata/ProfilePage";
+import { NotificationsPage } from "../features/notifications/NotificationsPage";
 import { HomePage } from "../features/orgs/HomePage";
 import { InvitationPage } from "../features/orgs/InvitationPage";
 import { OrgPage } from "../features/orgs/OrgPage";
@@ -49,10 +52,13 @@ export const router = createBrowserRouter([
           { path: "partners", element: <PartnersPage /> },
           { path: "products", element: <ProductsPage /> },
           { path: "products/:productId", element: <ProductDetailPage /> },
+          { path: "evidence", element: <EvidencePage /> },
+          { path: "evidence/:evidenceId", element: <EvidenceDetailPage /> },
           { path: "import", element: <ImportPage /> },
         ],
       },
       { path: "/platform/verifications", element: <VerificationsPage /> },
+      { path: "/notifications", element: <NotificationsPage /> },
       { path: "/invitations/:invitationId", element: <InvitationPage /> },
       { path: "/account", element: <AccountPage /> },
       { path: "/status", element: <StatusPage /> },

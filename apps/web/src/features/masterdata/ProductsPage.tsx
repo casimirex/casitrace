@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Link, useNavigate, useParams } from "react-router";
 import { Alert, Button, Card } from "../../components/ui";
 import { api, unwrap } from "../../lib/api";
+import { LinkedEvidence } from "../evidence/EvidenceDetailPage";
 import { fieldErrors, useCan, useOrgContext } from "./common";
 import { categoryLabel, ProductForm } from "./ProductForm";
 
@@ -14,6 +15,7 @@ const date = new Intl.DateTimeFormat(undefined, { dateStyle: "medium", timeStyle
 export function ProductsPage() {
   const org = useOrgContext();
   const can = useCan();
+  const queryClient = useQueryClient();
   const navigate = useNavigate();
   const [q, setQ] = useState("");
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -29,7 +31,11 @@ export function ProductsPage() {
   const create = useMutation({
     mutationFn: async (body: CreateInput) =>
       unwrap(await api.POST("/v1/orgs/{orgId}/products", { params: { path: { orgId: org.id } }, body })),
-    onSuccess: (p) => navigate(p.id),
+    onSuccess: async (p) => {
+      // Product lists elsewhere (evidence links, imports) must see the new product.
+      await queryClient.invalidateQueries({ queryKey: ["org", org.id, "products"] });
+      navigate(p.id);
+    },
     onError: (e) => setErrors(fieldErrors(e)),
   });
 
@@ -154,6 +160,7 @@ export function ProductDetailPage() {
             <dd>v{p.currentVersion}</dd>
           </dl>
         </Card>
+        <LinkedEvidence orgId={org.id} targetType="product" targetId={p.id} />
         <Card title="Version history">
           <p className="mb-3 text-sm text-muted">
             Versions never change once saved. Lots record the version they were made with.

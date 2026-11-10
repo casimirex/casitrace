@@ -32,3 +32,18 @@ export const unwrap = <T>(r: { data?: T; error?: unknown; response: Response }):
     env?.error?.details ?? [],
   );
 };
+
+/** Multipart upload (openapi-fetch serialises JSON only). Throws ApiError like unwrap. */
+export const postForm = async <T>(path: string, form: FormData): Promise<T> => {
+  const res = await fetch(`/api${path}`, { method: "POST", body: form, credentials: "include" });
+  const body = (await res.json().catch(() => ({}))) as T & {
+    error?: { message?: string; code?: string; details?: ApiErrorDetail[] };
+  };
+  if (res.ok) return body;
+  throw new ApiError(
+    body.error?.message ?? `Upload failed (${res.status})`,
+    res.status,
+    body.error?.code,
+    body.error?.details ?? [],
+  );
+};
