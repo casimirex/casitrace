@@ -39,6 +39,7 @@ Casitrace is a food traceability and evidence platform. The plan is `roadmap-v2.
 ## Non-negotiable rules
 
 1. **Every state change goes through `runCommand`** (`apps/api/src/platform/command.ts`). It requires at least one audit entry and commits audit + outbox with the change.
+   - Exceptions (not business records, decided in the 2026-11-11 audit, F-4): marking one's own notifications read; security counters (login throttle, rate-limit buckets); the shared-access log and passport view counts, which are themselves logs.
 2. **Append-only tables** (audit log now; events from P5) reject UPDATE/DELETE by trigger. Fix mistakes with correction events, never by editing rows. New append-only tables reuse `casitrace_reject_mutation()` **and** `REVOKE UPDATE, DELETE, TRUNCATE … FROM casitrace_app`.
 3. **Tenant isolation** (ADR 0008):
    - Every tenant-owned table has `org_id`, `ENABLE ROW LEVEL SECURITY` and policies using `casitrace_current_org()` (copy the `audit_log` policies in the `identity_access` migration).
@@ -95,7 +96,7 @@ Casitrace is a food traceability and evidence platform. The plan is `roadmap-v2.
 - Cross-organisation traces use `traceAcross` (exchange/cross-trace.ts); `traceLocal` is single-organisation. Unshared parts become redacted nodes (organisation name + verification only); backward segments drop the other side's customers, forward segments its other inputs.
 - Other organisations' identity: `orgIdentities()` (name + verified flag via the `organization_profile_public` view). Do not read other organisations' profiles directly.
 - A SHIP to a partner with `linkedOrgId` creates a handoff in the same transaction; voiding it is refused once accepted.
-- Notifications to another organisation: `notifyOrg()` (in-app + `notice` email).
+- Notifications to another organisation: `notifyOrg()` (in-app + `notice` email). Where no web origin is available (inside `recordEventTx`), emit a domain event and notify from the worker, like `handoff.created` → `apps/worker/src/exchange/handoff-notify.ts`.
 
 ## Public layer (P7)
 

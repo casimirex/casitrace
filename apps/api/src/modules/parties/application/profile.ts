@@ -5,6 +5,7 @@ import type { z } from "zod";
 import type { CommandContext } from "../../../platform/audit";
 import { runCommand } from "../../../platform/command";
 import { iso } from "../../../platform/dto";
+import { notifyOrg } from "../../../platform/notify";
 import { withPlatformAccess, withTenant } from "../../../platform/tenant";
 
 type ProfileDto = z.infer<typeof Profile>;
@@ -145,9 +146,11 @@ export const decideVerification = (
   ctx: CommandContext,
   organizationId: string,
   decision: z.infer<typeof VerificationDecision>,
+  webOrigin: string,
 ) =>
-  db.$transaction(async (tx) => {
-    await tx.$executeRaw`SELECT set_config('app.platform_access', 'on', true)`;
+  // A platform staff decision about one organisation: run as a command scoped to that organisation,
+  // so it is audited there and its owners/admins are told the outcome (audit F-3).
+  runCommand(db, { ...ctx, orgId: organizationId }, async (tx) => {
     const p = await tx.organizationProfile.findUnique({ where: { orgId: organizationId } });
     if (!p) throw new AppError("NOT_FOUND", "Organisation profile not found.");
     if (p.verificationStatus !== "pending")
@@ -166,18 +169,30 @@ export const decideVerification = (
         verificationNote: decision.note ?? null,
       },
     });
-    await tx.auditLog.create({
-      data: {
-        id: Bun.randomUUIDv7(),
-        orgId: organizationId,
-        actorType: ctx.actor.type,
-        actorId: ctx.actor.id,
-        action: approved ? "organisation.verified" : "organisation.verification_rejected",
-        resourceType: "organisation",
-        resourceId: organizationId,
-        requestId: ctx.requestId,
-        data: { note: decision.note ?? null },
+    await notifyOrg(
+      tx,
+      organizationId,
+      "organization:update",
+      {
+        kind: approved ? "organisation.verified" : "organisation.verification_rejected",
+        title: approved ? "Your business is verified" : "Verification not approved",
+        body: approved
+          ? "Casitrace checked your registration documents. Partners and public pages now show your business as verified."
+          : `Casitrace could not verify your business: ${decision.note ?? ""} Update your profile or documents and ask again.`,
+        link: `/orgs/${organizationId}/profile`,
+        dedupeKey: `verification:${organizationId}:${row.updatedAt.getTime()}`,
       },
-    });
-    return profileDto(row);
+      webOrigin,
+    );
+    return {
+      result: profileDto(row),
+      audit: [
+        {
+          action: approved ? "organisation.verified" : "organisation.verification_rejected",
+          resourceType: "organisation",
+          resourceId: organizationId,
+          data: { note: decision.note ?? null },
+        },
+      ],
+    };
   });

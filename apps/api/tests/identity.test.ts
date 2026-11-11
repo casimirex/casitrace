@@ -127,6 +127,34 @@ describe("password reset", () => {
   });
 });
 
+describe("change password (audit F-6)", () => {
+  test("needs the current password; is audited; signs out other devices; the old password stops working", async () => {
+    const u = await verifiedUser(app, "pw-change");
+    const other = client(app);
+    expect((await signIn(other, u.email)).status).toBe(200);
+    const newPassword = "a different long passphrase";
+
+    const wrong = await u.client.call("POST", "/api/v1/auth/change-password", {
+      currentPassword: "not my password at all",
+      newPassword,
+      revokeOtherSessions: true,
+    });
+    expect(wrong.status).toBeGreaterThanOrEqual(400);
+
+    const ok = await u.client.call("POST", "/api/v1/auth/change-password", {
+      currentPassword: PASSWORD,
+      newPassword,
+      revokeOtherSessions: true,
+    });
+    expect(ok.status).toBe(200);
+    expect((await u.client.call("GET", "/api/v1/me")).status).toBe(200);
+    expect((await other.call("GET", "/api/v1/me")).status).toBe(401);
+    expect((await signIn(client(app), u.email)).status).toBe(401);
+    expect((await signIn(client(app), u.email, newPassword)).status).toBe(200);
+    expect(await auditActions({ actorId: u.userId })).toContain("user.password_changed");
+  });
+});
+
 describe("sessions and CSRF", () => {
   test("sign-out ends the session", async () => {
     const { client: c } = await verifiedUser(app);

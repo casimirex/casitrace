@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Link, useParams } from "react-router";
 import { Alert, Button, Card } from "../../components/ui";
 import { api, unwrap } from "../../lib/api";
+import { kdeEntries } from "../../lib/labels";
 import { LinkedEvidence } from "../evidence/EvidenceDetailPage";
 import { useCan, useOrgContext } from "../masterdata/common";
 import { CreatePassportButton } from "../passports/PassportsPage";
@@ -270,7 +271,17 @@ export function LotDetailPage() {
                   ))}
                 </ul>
                 {Object.keys(e.kdes).length > 0 && (
-                  <p className="mt-1 font-mono text-xs text-muted">{JSON.stringify(e.kdes)}</p>
+                  <dl
+                    className="mt-1 grid grid-cols-[auto_1fr] gap-x-3 text-xs"
+                    aria-label="Recorded details"
+                  >
+                    {kdeEntries(e.kdes as Record<string, unknown>).map((k) => (
+                      <div key={k.key} className="contents">
+                        <dt className="text-muted">{k.label}</dt>
+                        <dd>{k.value}</dd>
+                      </div>
+                    ))}
+                  </dl>
                 )}
                 {e.overrideReason && (
                   <p className="mt-1 text-warn">Mass balance accepted: {e.overrideReason}</p>

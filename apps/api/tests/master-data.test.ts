@@ -64,6 +64,13 @@ describe("organisation profile and verification", () => {
       note: "Checked chamber of commerce record",
     });
     expect((await json(approved)).verificationStatus).toBe("verified");
+    // The owner is told (audit F-3).
+    const notes = await json<{ items: { kind: string; link: string }[] }>(
+      await c.call("GET", "/api/v1/me/notifications"),
+    );
+    expect(notes.items).toContainEqual(
+      expect.objectContaining({ kind: "organisation.verified", link: `/orgs/${orgId}/profile` }),
+    );
 
     const renamed = await c.call("PUT", `${base}/profile`, {
       ...profile,
@@ -72,9 +79,13 @@ describe("organisation profile and verification", () => {
     });
     expect((await json(renamed)).verificationStatus).toBe("unverified");
 
-    const log = await json<{ items: { action: string }[] }>(
+    const log = await json<{ items: { action: string; actorName: string }[] }>(
       await c.call("GET", `${base}/audit-log?limit=100`),
     );
+    // Names instead of IDs (audit F-5): the owner by name, platform staff described, never named.
+    const actor = (action: string) => log.items.find((i) => i.action === action)?.actorName;
+    expect(actor("organisation.verification_requested")).toBe("mill-owner person");
+    expect(actor("organisation.verified")).toBe("Casitrace staff");
     expect(log.items.map((i) => i.action)).toEqual(
       expect.arrayContaining([
         "organisation.profile_created",

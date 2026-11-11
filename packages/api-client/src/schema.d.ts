@@ -8610,6 +8610,7 @@ export interface components {
              * @example 019a6f3e-5b7d-7e8a-9c21-7d4e5f6a8b90
              */
             actorId: string | null;
+            actorName: string;
             resourceType: string;
             /**
              * Format: uuid

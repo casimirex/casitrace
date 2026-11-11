@@ -19,7 +19,7 @@
 |---|---|---|
 | Threat model (STRIDE) for auth, public endpoints, uploads, signing key; fix every High | Yes: 3 High (spoofable client IP for rate limits, per-process rate limits, signing key in the environment) and 5 Medium fixed, each with a test | `docs/security/threat-model.md` |
 | Backups with PITR + performed, recorded restore drill | Yes (staging) | WAL-G (continuous WAL every ≤ 60 s + daily encrypted base backup, off-site storage), `restore.sh`, `restore-drill.sh`, evidence mirror with SHA-256 checks |
-| Observability: traces, metrics, error tracking, uptime checks, alert routing | Yes, except the external uptime monitor (a service outside the VM, chosen with the hosting provider) | OpenTelemetry → Tempo; Prometheus metrics (API, worker, queues, outbox, backups, WAL archiving); 11 alert rules with promtool tests; Alertmanager email routing tested end to end (worker stopped → on-call email after 148 s) |
+| Observability: traces, metrics, error tracking, uptime checks, alert routing | Yes, except the external uptime monitor (a service outside the VM, chosen with the hosting provider) | OpenTelemetry → Tempo; Prometheus metrics (API, worker, queues, outbox, backups, WAL archiving); 10 alert rules with promtool tests; Alertmanager email routing tested end to end (worker stopped → on-call email after 148 s) |
 | Load test against the §3 NFRs | Yes | `docs/operations/load-tests/2026-11-10-staging.json` |
 | Signing key in a KMS with rotation; old versions still verify | Yes | OpenBao Transit, non-exportable key, AppRole least privilege; rotation rehearsed on staging with the API running |
 | Legal minimum: terms, privacy policy, DPA, retention policy | Drafts (need counsel) | `docs/legal/`, `docs/compliance/data-retention.md` |

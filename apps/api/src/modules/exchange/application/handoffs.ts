@@ -3,6 +3,7 @@ import type { Db, Prisma, Tx } from "@casitrace/db";
 import { AppError, newId } from "@casitrace/shared";
 import type { z } from "zod";
 import { runCommand } from "../../../platform/command";
+import { enqueueEvents } from "../../../platform/outbox";
 import { withTenant } from "../../../platform/tenant";
 import { type Ctx, recordEventTx } from "../../traceability/application/events";
 import { convertSameDimension, D, fixed, isUom } from "../../traceability/domain/quantity";
@@ -52,9 +53,10 @@ export const createHandoffForShipTx = async (
       uomCode: ln.uomCode,
     };
   });
+  const handoffId = newId();
   await tx.handoff.create({
     data: {
-      id: newId(),
+      id: handoffId,
       senderOrgId: ctx.orgId,
       receiverOrgId,
       shipEventId,
@@ -62,6 +64,16 @@ export const createHandoffForShipTx = async (
       shippedAt,
     },
   });
+  // The receiver is told by the worker (in-app + email): a delivery waiting to be booked in (audit F-1).
+  // Recorded under the receiver's org_id, because the notifications it causes belong to the receiver.
+  await enqueueEvents(tx, receiverOrgId, [
+    {
+      type: "handoff.created",
+      aggregateType: "handoff",
+      aggregateId: handoffId,
+      payload: { handoffId, senderOrgId: ctx.orgId, receiverOrgId, lines: snapshot.length, shared: !!share },
+    },
+  ]);
   if (share) {
     for (const l of snapshot) {
       await createLotGrantTx(tx, ctx, {

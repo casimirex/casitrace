@@ -5,6 +5,7 @@
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
 import { createClamavScanner } from "../../worker/src/evidence/clamav";
 import { createScanHandler } from "../../worker/src/evidence/scan-handler";
+import { createHandoffNotifier } from "../../worker/src/exchange/handoff-notify";
 import {
   addMember,
   type Client,
@@ -151,6 +152,43 @@ describe("grower → mill → retailer", () => {
     expect(incoming.items).toHaveLength(1);
     const h = incoming.items[0] as Handoff;
     expect(h).toMatchObject({ status: "pending", sharedHistory: false });
+
+    // The mill is told about the delivery (audit F-1): the worker's handler on the outbox event,
+    // run twice to show it is idempotent.
+    const evt = await db.outboxEvent.findFirstOrThrow({
+      where: { type: "handoff.created", aggregateId: h.id },
+    });
+    expect(evt.orgId).toBe(mill.id);
+    const notifyMill = createHandoffNotifier(db, "https://app.example");
+    const relayed = {
+      eventId: evt.id,
+      type: evt.type,
+      orgId: evt.orgId,
+      aggregateType: evt.aggregateType,
+      aggregateId: evt.aggregateId,
+      payload: evt.payload,
+      occurredAt: evt.occurredAt.toISOString(),
+    };
+    await notifyMill(relayed);
+    await notifyMill(relayed);
+    const notes = await json<{ items: { kind: string; title: string; link: string }[] }>(
+      await mill.c.call("GET", "/api/v1/me/notifications"),
+    );
+    const delivery = notes.items.filter((n) => n.kind === "handoff.received");
+    expect(delivery).toHaveLength(1);
+    expect(delivery[0]?.title).toContain("Delivery from");
+    expect(delivery[0]?.link).toBe(`/orgs/${mill.id}/shipments`);
+    const emails = await db.outboxEvent.findMany({ where: { type: "email.requested", orgId: mill.id } });
+    expect(
+      emails.filter((e) =>
+        JSON.stringify(e.payload).includes(`https://app.example/orgs/${mill.id}/shipments`),
+      ),
+    ).toHaveLength(1);
+    // The grower (sender) gets nothing.
+    const growerNotes = await json<{ items: { kind: string }[] }>(
+      await grower.c.call("GET", "/api/v1/me/notifications"),
+    );
+    expect(growerNotes.items.some((n) => n.kind === "handoff.received")).toBe(false);
     expect(h.lines).toEqual([expect.objectContaining({ lotCode: "H-G-1", quantity: "1000" })]);
     ids.h1 = h.id;
 

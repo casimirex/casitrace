@@ -117,6 +117,67 @@ function TwoFactor({ enabled }: { enabled: boolean }) {
   );
 }
 
+/** Change password (audit F-6). Other devices are signed out, so a leaked password stops working there too. */
+function ChangePassword() {
+  const [error, setError] = useState<string>();
+  const [done, setDone] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const submit = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const form = e.currentTarget;
+    const f = new FormData(form);
+    const next = String(f.get("newPassword"));
+    setDone(false);
+    if (next !== String(f.get("confirmPassword"))) return setError("The two new passwords are different.");
+    setBusy(true);
+    setError(undefined);
+    const { error } = await authClient.changePassword({
+      currentPassword: String(f.get("currentPassword")),
+      newPassword: next,
+      revokeOtherSessions: true,
+    });
+    setBusy(false);
+    if (error) return setError(errorMessage(error, "Could not change the password."));
+    form.reset();
+    setDone(true);
+  };
+  return (
+    <Card title="Password">
+      <form onSubmit={submit} className="grid gap-3">
+        {error && <Alert>{error}</Alert>}
+        {done && <Alert tone="success">Password changed. Other devices have been signed out.</Alert>}
+        <Field
+          label="Current password"
+          name="currentPassword"
+          type="password"
+          autoComplete="current-password"
+          required
+        />
+        <Field
+          label="New password"
+          name="newPassword"
+          type="password"
+          autoComplete="new-password"
+          minLength={12}
+          required
+        />
+        <Field
+          label="Repeat new password"
+          name="confirmPassword"
+          type="password"
+          autoComplete="new-password"
+          minLength={12}
+          required
+        />
+        <p className="text-sm text-muted">At least 12 characters. You stay signed in on this device.</p>
+        <Button type="submit" busy={busy}>
+          Change password
+        </Button>
+      </form>
+    </Card>
+  );
+}
+
 function YourData() {
   const navigate = useNavigate();
   const [error, setError] = useState<string>();
@@ -175,6 +236,7 @@ export function AccountPage() {
       <PageTitle title="Account" subtitle={`${me.data.user.name} · ${me.data.user.email}`} />
       <div className="grid gap-6 lg:grid-cols-2">
         <TwoFactor enabled={me.data.user.twoFactorEnabled} />
+        <ChangePassword />
         <YourData />
       </div>
     </>

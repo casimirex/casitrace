@@ -367,6 +367,9 @@
             "format": "uuid",
             "example": "019a6f3e-5b7d-7e8a-9c21-7d4e5f6a8b90"
           },
+          "actorName": {
+            "type": "string"
+          },
           "resourceType": {
             "type": "string"
           },
@@ -392,6 +395,7 @@
           "action",
           "actorType",
           "actorId",
+          "actorName",
           "resourceType",
           "resourceId",
           "requestId"

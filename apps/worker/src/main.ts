@@ -10,6 +10,7 @@ import { EventRegistry } from "./events";
 import { createClamavScanner } from "./evidence/clamav";
 import { runExpiryCheck } from "./evidence/expiry";
 import { createScanHandler } from "./evidence/scan-handler";
+import { createHandoffNotifier } from "./exchange/handoff-notify";
 import { collectQueues, instrument, serveWorkerHttp, workerMetrics } from "./observability";
 import { relayOutboxBatch } from "./outbox-relay";
 import { runRetention } from "./retention";
@@ -39,6 +40,7 @@ const storage = createS3Storage({
 const scanner = createClamavScanner(env.CLAMAV_HOST, env.CLAMAV_PORT);
 
 const registry = new EventRegistry()
+  .on("handoff.created", instrument(metrics, "handoff.created", createHandoffNotifier(db, env.WEB_ORIGIN)))
   .on(
     "evidence.file_uploaded",
     instrument(metrics, "evidence.file_uploaded", createScanHandler(db, storage, scanner)),

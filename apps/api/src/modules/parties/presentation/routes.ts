@@ -243,7 +243,7 @@ export const partiesRoutes = (deps: Deps) => {
     .openapi(pendingR, async (c) => c.json({ items: await listPendingVerifications(db) }, 200))
     .openapi(decideR, async (c) => {
       const { organizationId } = p<{ organizationId: string }>(c);
-      return c.json(await decideVerification(db, userCommand(c), organizationId, b(c)), 200);
+      return c.json(await decideVerification(db, userCommand(c), organizationId, b(c), deps.webOrigin), 200);
     })
     .openapi(listLocationsR, async (c) => {
       const { type, includeArchived: inc } = q<{ type?: string; includeArchived: boolean }>(c);

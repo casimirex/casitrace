@@ -5,6 +5,7 @@ import { useParams } from "react-router";
 import { Alert, Button, Card, Field, RoleBadge, SelectField } from "../../components/ui";
 import { api, unwrap } from "../../lib/api";
 import { authClient, errorMessage } from "../../lib/auth";
+import { actionLabel } from "../../lib/labels";
 import { useOrg } from "./queries";
 
 const dateTime = new Intl.DateTimeFormat(undefined, { dateStyle: "medium", timeStyle: "short" });
@@ -133,8 +134,8 @@ function AuditLog({ orgId }: { orgId: string }) {
           <thead>
             <tr className="text-left text-xs uppercase tracking-wide text-muted">
               <th className="py-2 pr-4 font-medium">When</th>
-              <th className="py-2 pr-4 font-medium">Action</th>
-              <th className="py-2 font-medium">Actor</th>
+              <th className="py-2 pr-4 font-medium">What happened</th>
+              <th className="py-2 font-medium">Who</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-line">
@@ -143,8 +144,8 @@ function AuditLog({ orgId }: { orgId: string }) {
                 <td className="py-2 pr-4 whitespace-nowrap tabular-nums">
                   {dateTime.format(new Date(e.occurredAt))}
                 </td>
-                <td className="py-2 pr-4 font-mono text-xs">{e.action}</td>
-                <td className="py-2 font-mono text-xs text-muted">{e.actorId?.slice(0, 8) ?? e.actorType}</td>
+                <td className="py-2 pr-4">{actionLabel(e.action)}</td>
+                <td className="py-2 text-muted">{e.actorName}</td>
               </tr>
             ))}
           </tbody>

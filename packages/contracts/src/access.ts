@@ -54,6 +54,8 @@ export const AuditEntryDto = z
     action: z.string(),
     actorType: z.string(),
     actorId: Uuid.nullable(),
+    /** Display name: the member's name, "Casitrace staff", "Casitrace (automatic)" or "Former member". */
+    actorName: z.string(),
     resourceType: z.string(),
     resourceId: Uuid.nullable(),
     requestId: z.string().nullable(),

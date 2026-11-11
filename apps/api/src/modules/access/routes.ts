@@ -38,7 +38,36 @@ type AuditRow = {
   requestId: string | null;
   data: unknown;
 };
-const auditDto = (r: AuditRow) => ({ ...r, occurredAt: r.occurredAt.toISOString() });
+const auditDto = (r: AuditRow, actorName: string) => ({
+  ...r,
+  actorName,
+  occurredAt: r.occurredAt.toISOString(),
+});
+
+/**
+ * Names for the activity log (audit F-5). Only names of this organisation's members are shown;
+ * anyone else (platform staff, people who left) is described, never named.
+ */
+const actorNames = async (db: Deps["db"], orgId: string, rows: AuditRow[]) => {
+  const ids = [...new Set(rows.map((r) => r.actorId).filter((id): id is string => !!id))];
+  const [members, staff] = await Promise.all([
+    db.member.findMany({
+      where: { organizationId: orgId, userId: { in: ids } },
+      select: { userId: true, user: { select: { name: true } } },
+    }),
+    db.user.findMany({ where: { id: { in: ids }, platformRole: { not: null } }, select: { id: true } }),
+  ]);
+  const names = new Map(members.map((m) => [m.userId, m.user.name]));
+  const staffIds = new Set(staff.map((u) => u.id));
+  return (r: AuditRow) =>
+    r.actorType === "system"
+      ? "Casitrace (automatic)"
+      : r.actorId && names.has(r.actorId)
+        ? (names.get(r.actorId) as string)
+        : r.actorId && staffIds.has(r.actorId)
+          ? "Casitrace staff"
+          : "Former member";
+};
 
 export const accessRoutes = (deps: Deps) => {
   const { db } = deps;
@@ -193,7 +222,8 @@ export const accessRoutes = (deps: Deps) => {
             role: m.role,
             since: m.createdAt.toISOString(),
           })),
-          activity: activity.map(auditDto),
+          // The user's own actions: the actor is always this user.
+          activity: activity.map((r) => auditDto(r, record.name)),
         },
         200,
       );
@@ -225,8 +255,12 @@ export const accessRoutes = (deps: Deps) => {
         }),
       );
       const page = rows.slice(0, limit);
+      const nameOf = await actorNames(db, orgId, page);
       return c.json(
-        { items: page.map(auditDto), nextCursor: rows.length > limit ? (page.at(-1)?.id ?? null) : null },
+        {
+          items: page.map((r) => auditDto(r, nameOf(r))),
+          nextCursor: rows.length > limit ? (page.at(-1)?.id ?? null) : null,
+        },
         200,
       );
     })
